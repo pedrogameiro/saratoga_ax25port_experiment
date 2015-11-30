@@ -1,0 +1,170 @@
+ *
+ * $Id: flags.txt,v 1.1.1.1 2014/10/15 11:55:35 lloydwood Exp $
+ *
+
+SARATOGA FLAGS FORMAT AND enum types
+
+ * Saratoga Sflag Header Field Format - 32 bit unsigned integer (flag_t)
+ *
+ *             111111 11112222 22222233
+ *  01234567 89012345 67890123 45678901
+ * +--------+--------+--------+--------+
+ * |        |        |        |        |
+ * +--------+--------+--------+--------+
+ *
+ * BEACON FRAME FLAGS
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ * | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+ * |0|0|1|-> Version 1 - f_version
+ * | | | |0|0|0|0|0|-> Beacon Frame - f_frametype
+ * | | | | | | | | |X|X|-> Descriptor - f_descriptor
+ * | | | | | | | | | | |X|-> Bundles - f_bundle
+ * | | | | | | | | | | | |X|-> Streaming - f_stream
+ * | | | | | | | | | | | | |X|X| | |-> Tx Willing - f_txwilling
+ * | | | | | | | | | | | | | | |X|X|-> Rx Willing - f_rxwilling
+ * | | | | | | | | | | | | | | | | |X|-> UDP Lite - f_udptype
+ * | | | | | | | | | | | | | | | | | |X|-> Freespace Advertise - f_freespace
+ * | | | | | | | | | | | | | | | | | | |X|X|-> Freespace Descriptor - f_freespaced
+ * | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ *
+ *******************************************************************
+
+ * REQUEST FRAME FLAGS
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ * | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+ * |0|0|1|-> Version 1 - f_version
+ * | | | |0|0|0|0|1|-> Request Frame - f_frametype
+ * | | | | | | | | |X|X|-> Descriptor - f_descriptor
+ * | | | | | | | | | | |X|-> Bundles - f_bundles
+ * | | | | | | | | | | | |X|-> Streams - f_streams
+ * | | | | | | | | | | | | |X|X|-> Willingness - f_txwilling
+ * | | | | | | | | | | | | | | |X|-> Session Type - f_sessiontype
+ * | | | | | | | | | | | | | | | |X|-> File or Directory - f_fileordir
+ * | | | | | | | | | | | | | | | | |X|-> UDP Lite - f_udptype
+ * | | | | | | | | | | | | | | | | | | | | | | | | |X|X|X|X|X|X|X|X|-> Request Type
+ * | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ *
+ *******************************************************************
+
+ * METADATA FRAME FLAGS
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ * | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+ * |0|0|1|-> Version 1 - f_version
+ * | | | |0|0|0|1|0|-> Metadata Frame - f_frametype
+ * | | | | | | | | |X|X|-> Descriptor - f_descriptor
+ * | | | | | | | | | | |X|X|-> Type of Transfer - f_transfer
+ * | | | | | | | | | | | | |X|-> Transfer in Progress - f_progress
+ * | | | | | | | | | | | | | |X|-> Reliability - f_udptype
+ * | | | | | | | | | | | | | | | | | | | | | | | | |X|X|X|X|-> Checksum Length - f_csumlen
+ * | | | | | | | | | | | | | | | | | | | | | | | | | | | | |X|X|X|X|-> Checksum Type - f_csum
+ * | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ *
+ *******************************************************************
+
+ * DATA FRAME FLAGS
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ * | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+ * |0|0|1|-> Version 1 - f_version
+ * | | | |0|0|0|1|1|-> Data Frame - f_frametype
+ * | | | | | | | | |X|X|-> Descriptor - f_descriptor
+ * | | | | | | | | | | |X|X|-> Type of Transfer - f_transfer
+ * | | | | | | | | | | | | |X|-> Timestamps - f_tstamp
+ * | | | | | | | | | | | | | | | |X|-> Request Status - f_reqstatus
+ * | | | | | | | | | | | | | | | | |X|-> End of Data - f_eod
+ * | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ *
+ *******************************************************************
+
+ * STATUS FRAME FLAGS
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ * | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+ * |0|0|1|-> Version 1 - f_version
+ * | | | |0|0|1|0|0|-> Status Frame - f_frametype
+ * | | | | | | | | |X|X|-> Descriptor - f_dewcriptor
+ * | | | | | | | | | | | | |X|-> Timestamp - f_tstamp
+ * | | | | | | | | | | | | | |X|->Metadata Received - f_metadatarecvd
+ * | | | | | | | | | | | | | | |X|-> All Holes - f_allholes
+ * | | | | | | | | | | | | | | | |X|-> Holes Requested or Sent - f_holes
+ * | | | | | | | | | | | | | | | | | | | | | | | | |X|X|X|X|X|X|X|X|-> Error Code - f_status
+ * | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ *
+ *******************************************************************
+
+ *
+ * Saratoga Dflag Header Field Format - 16 bit unsigned integer (dflag_t)
+ *
+ *             1
+ *  01234567 89012345
+ * +--------+--------+
+ * |        |        |
+ * +--------+--------+
+ *
+ * DIRECTORY ENTRY FLAGS
+ *  0                   1
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+ * | | | | | | | | | | | | | | | | |
+ * |1|-> Bit 0 is always set
+ * | | | | | | |X|X|-> Dirent Properties - d_properties
+ * | | | | | | | | |X|X|-> Dirent Descriptor - d_descriptor
+ * | | | | | | | | | | |X|-> Dirent File or Bundle - d_forb
+ * | | | | | | | | | | | | | | | | |
+ *  0                   1
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+ *
+ *******************************************************************
+
+ *
+ * Saratoga Tflag Header Field Format - 8 bit unsigned integer (tflag_t)
+ *
+ *  01234567
+ * +--------+
+ * |        |
+ * +--------+
+ *
+ * TIMESTAMP FLAGS
+ *  0 1 2 3 4 5 6 7
+ * | | | | | | | | |
+ * | | | | | |X|X|X|-> Timestamp Type - t_timestamp
+ * | | | | | | | | |
+ *  0 1 2 3 4 5 6 7
+ *
+ *******************************************************************
+
+ *
+ * $Log: flags.txt,v $
+ * Revision 1.1.1.1  2014/10/15 11:55:35  lloydwood
+ * Creating saratoga-vallona-dev.
+ *
+ * This is the Saratoga transfer protocol Vallona implementation,
+ * under development by Charles Smith.
+ *
+ * Revision 1.2  2013/03/30 11:42:03  chas
+ * Working on directory entry class and also a couple of
+ * small changes in flags. The dirent has the most significant
+ * bit always det to 1. So I needed to add a dirent::init()
+ * flag to set it. Also added support in timestamp for
+ * standard year 2000 epoch times. Woops just remembered that what
+ * I have done is not correct for times. epoch is 1970 of course.
+ * Will sort it
+ *
+ * Revision 1.1  2013/03/30 06:17:07  chas
+ * Major fixup of flags. We now have the number of bits for each flag
+ * and the most significant bit. This along wth the formula
+ * 32 - bits - msb gives us the correct shift to do
+ *
+ *

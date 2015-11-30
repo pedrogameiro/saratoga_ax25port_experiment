@@ -1,0 +1,96 @@
+Sat Nov 21 15:49:00 2015 GMT:
+####################SARATOGA STARTED####################
+Sat Nov 21 15:49:00 2015 GMT
+Sat Nov 21 15:49:00 2015 GMT:First IPv4 Physical Interface is 192.168.1.2
+Sat Nov 21 15:49:00 2015 GMT:First IPv6 Physical Interface is fe80::221:ff:fe86:b4f5
+Sat Nov 21 15:49:00 2015 GMT:IPv4:
+ Input UDP:AF_INET 0.0.0.0 PORT=7542 FD=4
+Sat Nov 21 15:49:00 2015 GMT: Output UDP:AF_INET 192.168.1.2 PORT=7542 FD=6
+Sat Nov 21 15:49:00 2015 GMT: Loopback UDP:AF_INET 127.0.0.1 PORT=7542 FD=8
+Sat Nov 21 15:49:00 2015 GMT: Mcast In UDP:AF_INET 224.0.0.108 PORT=7542 FD=12
+Sat Nov 21 15:49:00 2015 GMT: Mcast Out UDP:AF_INET 224.0.0.108 PORT=7542 FD=10
+Sat Nov 21 15:49:00 2015 GMT:IPv6:
+ Input UDP:AF_INET6 :: PORT=7542 FD=5
+Sat Nov 21 15:49:00 2015 GMT: Output UDP:AF_INET6 fe80::221:ff:fe86:b4f5 PORT=7542 FD=7
+Sat Nov 21 15:49:00 2015 GMT: Loopback UDP:AF_INET6 ::1 PORT=7542 FD=9
+Sat Nov 21 15:49:00 2015 GMT: Mcast In UDP:AF_INET6 ff02::6c PORT=7542 FD=13
+Sat Nov 21 15:49:00 2015 GMT: Mcast Out UDP:AF_INET6 ff02::6c PORT=7542 FD=11
+Sat Nov 21 15:49:01 2015 GMT:initialise(): 1 lo=127.0.0.1 MTU=65536 MAC=00:00:00:00:00:00
+3 wlan0=192.168.1.2 MTU=1280 MAC=00:21:00:86:b4:f5
+1 lo=::1 MTU=65536 MAC=00:00:00:00:00:00
+3 wlan0=fe80::221:ff:fe86:b4f5 MTU=1280 MAC=00:21:00:86:b4:f5
+
+Sat Nov 21 15:49:03 2015 GMT:?: show valid commands. cmd ? show usage
+beacon: send a beacon every secs
+checksum: set checksums required and type
+debug: set debug level 0..9
+descriptor: advertise & set default descriptor size
+eid: manually set the eid
+exit: exit saratoga
+files: List local files currently open and mode
+freespace: do we advertise freespace
+get: Get a file from a peer
+getrm: Get a file from a peer then remove it from the peer
+help: show commands
+history: show command history
+home: Set home directory for transfers
+ls: Get a directory listing from a peer
+maxbuff: Set maximum file read buffer length
+pinfo: List peer information
+peers: List peers or Add/Remove peer(s)
+prompt: Set or show current prompt
+put: Send a file to a peer
+putrm: Send a file to a peer then remove it from the peer
+quit: exit saratoga
+rm: Remove a file from a peer
+rmdir: Remove a directory from a peer
+rx: Saratoga can or cannot receive
+session: Set the session number
+stream: Saratoga can or cannot handle stream
+timer: Timeout msecs for beacon's, request's, transfers, framebuf tx & status
+timestamp: Timestamps off or what type to send
+timezone: Timezone to use local time or universal time
+transfers: List current active transfers
+tx: Saratoga can or cannot transmit
+
+Sat Nov 21 15:49:35 2015 GMT:cli_beacon::execute() Sending IPv4 Multicast Beacon EID 192.168.1.2 3781
+Sat Nov 21 15:49:35 2015 GMT:DEBUG 2: Receiving interface UDP:AF_INET 0.0.0.0 PORT=7542 FD=4
+Sat Nov 21 15:49:35 2015 GMT:Added new Peer 192.168.1.2 port 7542 fd=14
+Sat Nov 21 15:49:35 2015 GMT:Rx BEACON from 192.168.1.2
+Sat Nov 21 15:49:35 2015 GMT:DEBUG 2: Receiving interface UDP:AF_INET 224.0.0.108 PORT=7542 FD=12
+Sat Nov 21 15:49:35 2015 GMT:Rx BEACON from 192.168.1.2
+Sat Nov 21 15:50:05 2015 GMT:cli_beacon::execute() Sending IPv4 Multicast Beacon EID 192.168.1.2 3781
+Sat Nov 21 15:50:05 2015 GMT:DEBUG 2: Change in # of fd's
+Sat Nov 21 15:50:05 2015 GMT:cli_beacon::execute() Sending IPv4 Multicast Beacon EID 192.168.1.2 3781
+Sat Nov 21 15:50:05 2015 GMT:DEBUG 2: Receiving interface UDP:AF_INET 0.0.0.0 PORT=7542 FD=4
+Sat Nov 21 15:50:05 2015 GMT:Rx BEACON from 192.168.1.2
+Sat Nov 21 15:50:05 2015 GMT:DEBUG 2: Receiving interface UDP:AF_INET 224.0.0.108 PORT=7542 FD=12
+Sat Nov 21 15:50:05 2015 GMT:Rx BEACON from 192.168.1.2
+Sat Nov 21 15:50:05 2015 GMT:DEBUG 2: Receiving interface UDP:AF_INET 0.0.0.0 PORT=7542 FD=4
+Sat Nov 21 15:50:06 2015 GMT:Rx BEACON from 192.168.1.2
+Sat Nov 21 15:50:06 2015 GMT:DEBUG 2: Receiving interface UDP:AF_INET 224.0.0.108 PORT=7542 FD=12
+Sat Nov 21 15:50:06 2015 GMT:Rx BEACON from 192.168.1.2
+Sat Nov 21 15:50:36 2015 GMT:cli_beacon::execute() Sending IPv4 Multicast Beacon EID 192.168.1.2 3781
+Sat Nov 21 15:50:36 2015 GMT:DEBUG 2: Receiving interface UDP:AF_INET 0.0.0.0 PORT=7542 FD=4
+Sat Nov 21 15:50:36 2015 GMT:Rx BEACON from 192.168.1.2
+Sat Nov 21 15:50:36 2015 GMT:DEBUG 2: Receiving interface UDP:AF_INET 224.0.0.108 PORT=7542 FD=12
+Sat Nov 21 15:50:36 2015 GMT:Rx BEACON from 192.168.1.2
+Sat Nov 21 15:51:06 2015 GMT:cli_beacon::execute() Sending IPv4 Multicast Beacon EID 192.168.1.2 3781
+Sat Nov 21 15:51:06 2015 GMT:DEBUG 2: Receiving interface UDP:AF_INET 0.0.0.0 PORT=7542 FD=4
+Sat Nov 21 15:51:06 2015 GMT:Rx BEACON from 192.168.1.2
+Sat Nov 21 15:51:06 2015 GMT:DEBUG 2: Receiving interface UDP:AF_INET 224.0.0.108 PORT=7542 FD=12
+Sat Nov 21 15:51:06 2015 GMT:Rx BEACON from 192.168.1.2
+Sat Nov 21 15:51:41 2015 GMT:cli_beacon::execute() Sending IPv4 Multicast Beacon EID 192.168.1.2 3781
+Sat Nov 21 15:51:41 2015 GMT:Exit Flag Set Bye!!
+Sat Nov 21 15:51:41 2015 GMT:Removing Peer UDP:AF_INET 192.168.1.2 PORT=7542 FD=14
+Sat Nov 21 15:51:41 2015 GMT:
+########################################################
+Sat Nov 21 15:51:41 2015 GMT
+
+
+########################################################
+Sat Nov 21 15:51:41 2015 GMT
+Sat Nov 21 15:51:41 2015 GMT:####################SARATOGA ENDED OK###################
+
+Sat Nov 21 15:51:41 2015 GMT:DEBUG 3: writeconf: Writing configuration file ../saratoga.conf
+Sat Nov 21 15:51:44 2015 GMT:DEBUG 3: writeconf(): Configuration file ../saratoga.conf written
