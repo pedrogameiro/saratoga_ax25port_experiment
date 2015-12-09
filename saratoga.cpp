@@ -50,9 +50,7 @@
 #include "metadata.h"
 #include "status.h"
 
-#include <netax25/axlib.h>
-#include <netax25/ax25.h>
-#include <netax25/axconfig.h>
+
 
 #include "holes.h"
 
@@ -62,6 +60,7 @@ namespace saratoga
 {
 
 bool	resizeset = false;
+
 
 // Work out what frame type we have read and handle it
 // If the # if fd's change then return true so we know in our mainloop
@@ -513,6 +512,8 @@ main(int argc, char **argv)
 {
 	int		opt; // Command line options
 
+
+
 	string args = "";	// Command line entry args
 	string addargs = "";	// Add to args complete an arg
 	std::vector<string> arglist; // List of arg words
@@ -520,32 +521,26 @@ main(int argc, char **argv)
 	string confname = "../saratoga.conf"; // Default config file name
 
 // AX25
-	char* ax25port = "spacelink";
-	char* destcall = "ALL";
-	struct full_sockaddr_ax25 dest;
-	struct full_sockaddr_ax25 src;
-	char *portcall, *port;
-	int slen, dlen, s;
-	char message[200];
-
 	if (ax25_config_load_ports() == 0) {
 		saratoga::scr.error("No AX.25 ports defined\n");
 		//return 1;
 	}else {
-		if ((portcall = ax25_config_get_addr(port)) == NULL) {
-			saratoga::scr.error("Invalid AX.25 port [ %s ]\n"+ string(port) );
+		if ((ax25portcall = ax25_config_get_addr(ax25port)) == NULL) {
+			saratoga::scr.error("Invalid AX.25 port [ %s ]\n"+ string(ax25port) );
 			return 1;
 		}
-		if ((dlen = ax25_aton(destcall, &dest)) == -1) {
-			saratoga::scr.error("Unable to convert destination callsign '%s'\n" + string(destcall));
+		if ((ax25dlen = ax25_aton(ax25destcall, &dest)) == -1) {
+			saratoga::scr.error("Unable to convert destination callsign '%s'\n" + string(ax25destcall));
 			return 1;
 		}
-		if ((slen = ax25_aton(portcall, &src)) == -1) {
-			saratoga::scr.error("Unable to convert source callsign '%s'\n" + string(portcall));
+		if ((ax25slen = ax25_aton(ax25portcall, &src)) == -1) {
+			saratoga::scr.error("Unable to convert source callsign '%s'\n" + string(ax25portcall));
 			return 1;
 		}
-	}
 
+		saratoga::scr.msg("AX.25 started with success.\n");
+	}
+// Done
 
 	// Handle command line input args
 	// to set udp port log file and config file names

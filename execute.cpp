@@ -46,9 +46,15 @@
 #include "tran.h"
 #include "globals.h"
 
+
+
+
+
+
 using namespace std;
 
 // A command has a name, a usage a help and a function to call
+
 
 namespace saratoga
 {
@@ -75,6 +81,8 @@ cli_beacon::timerexpired()
 	return(false);
 }
 
+
+
 /*
  * Send beacons out
  */
@@ -87,6 +95,30 @@ cli_beacon::execute()
 
 	frame*	f;
 	sardir::fsinfo *fs = new sardir::fsinfo(".");
+
+
+	if (ax25port != NULL ){
+
+		if ((ax25sock = socket(AF_AX25, SOCK_DGRAM, 0)) == -1) {
+			fprintf(stderr, "socket() error");
+			return 1;
+		}
+
+
+		if (bind(ax25sock, (struct sockaddr *)&src, ax25slen) == -1) {
+			fprintf(stderr, "bind() error");
+			return 1;
+		}
+
+		//ax25message = "hello";
+
+		if (sendto(ax25sock, "hello", strlen(ax25message), 0, (struct sockaddr *)&dest, ax25dlen) == -1) {
+		 	scr.error("Cant send AX25 beacon!");
+		}else
+			scr.msg("[AX25] Beacon sent.");
+	}
+
+
 
 	// Assemble & Send Multicast IPv4 Beacon
 	// The EID always contains the local IPv4 Address for v4 beacons

@@ -41,6 +41,10 @@
 #include <string.h>
 #include <list>
 
+#include <netax25/axlib.h>
+#include <netax25/ax25.h>
+#include <netax25/axconfig.h>
+
 /* 
  * At this stage we do not support 128 bit descriptors but the code is
  * all there. Just define this and we are (well should be) good to go
@@ -60,7 +64,15 @@ extern int			debuglevel();
 //using namespace std;
 
 namespace saratoga 
-{
+{	// AX25
+
+ static char* ax25port = "spacelink" ;
+ static char* ax25destcall = "ALL";
+ static char *ax25portcall = NULL;;
+ static struct full_sockaddr_ax25 dest;
+ static struct full_sockaddr_ax25 src;
+ static int ax25slen, ax25dlen, ax25sock;
+ static char ax25message[6];
 
 typedef uint32_t		flag_t;		// Saratoga Flags
 typedef uint16_t		dflag_t;	// Directory Flags
