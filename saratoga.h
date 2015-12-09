@@ -66,13 +66,13 @@ extern int			debuglevel();
 namespace saratoga 
 {	// AX25
 
- static char* ax25port = "spacelink" ;
- static char* ax25destcall = "ALL";
- static char *ax25portcall = NULL;;
- static struct full_sockaddr_ax25 dest;
- static struct full_sockaddr_ax25 src;
- static int ax25slen, ax25dlen, ax25sock;
- static char ax25message[6];
+extern char* ax25port;
+extern char* ax25destcall;
+extern char *ax25portcall;
+extern struct full_sockaddr_ax25 dest;
+extern struct full_sockaddr_ax25 src;
+extern int ax25slen, ax25dlen, ax25sock;
+extern char ax25message[6];
 
 typedef uint32_t		flag_t;		// Saratoga Flags
 typedef uint16_t		dflag_t;	// Directory Flags

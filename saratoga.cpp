@@ -60,7 +60,13 @@ namespace saratoga
 {
 
 bool	resizeset = false;
-
+char* ax25port = "spacelink" ;
+char* ax25destcall = "ALL";
+char *ax25portcall = NULL;
+struct full_sockaddr_ax25 dest;
+struct full_sockaddr_ax25 src;
+int ax25slen, ax25dlen, ax25sock;
+char ax25message[6];
 
 // Work out what frame type we have read and handle it
 // If the # if fd's change then return true so we know in our mainloop

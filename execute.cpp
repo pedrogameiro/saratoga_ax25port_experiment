@@ -33,11 +33,13 @@
 // #include <iostream>
 #include <cstring>
 #include <string>
+#include <stdio.h>
 #include <vector>
 #include <sys/types.h>
 #include "screen.h"
 #include "ip.h"
 #include "cli.h"
+#include "saratoga.h"
 #include "sarflags.h"
 #include "timestamp.h"
 #include "fileio.h"
