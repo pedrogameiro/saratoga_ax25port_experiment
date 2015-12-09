@@ -35,7 +35,7 @@ endif
 
 -include ../makefile.defs
 
-# Add inputs and outputs from these tool invocations to the build variables 
+# Add inputs and outputs from these tool invocations to the build variables
 
 # All Target
 all: rcm
@@ -44,7 +44,7 @@ all: rcm
 rcm: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++  -o "rcm" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -lax25 -o "rcm" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -57,3 +57,4 @@ clean:
 .SECONDARY:
 
 -include ../makefile.targets
+

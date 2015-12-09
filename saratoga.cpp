@@ -50,6 +50,10 @@
 #include "metadata.h"
 #include "status.h"
 
+#include <netax25/axlib.h>
+#include <netax25/ax25.h>
+#include <netax25/axconfig.h>
+
 #include "holes.h"
 
 using namespace std;
@@ -515,9 +519,37 @@ main(int argc, char **argv)
 	string logname = "../saratoga.log"; // Default log file name
 	string confname = "../saratoga.conf"; // Default config file name
 
+// AX25
+	char* ax25port = "spacelink";
+	char* destcall = "ALL";
+	struct full_sockaddr_ax25 dest;
+	struct full_sockaddr_ax25 src;
+	char *portcall, *port;
+	int slen, dlen, s;
+	char message[200];
+
+	if (ax25_config_load_ports() == 0) {
+		saratoga::scr.error("No AX.25 ports defined\n");
+		//return 1;
+	}else {
+		if ((portcall = ax25_config_get_addr(port)) == NULL) {
+			saratoga::scr.error("Invalid AX.25 port [ %s ]\n"+ string(port) );
+			return 1;
+		}
+		if ((dlen = ax25_aton(destcall, &dest)) == -1) {
+			saratoga::scr.error("Unable to convert destination callsign '%s'\n" + string(destcall));
+			return 1;
+		}
+		if ((slen = ax25_aton(portcall, &src)) == -1) {
+			saratoga::scr.error("Unable to convert source callsign '%s'\n" + string(portcall));
+			return 1;
+		}
+	}
+
+
 	// Handle command line input args
 	// to set udp port log file and config file names
-	// usage: saratoga [-p <port>] [-l <logfile] [-c <conffile>]
+	// usage: saratoga [-p <	port>] [-l <logfile] [-c <conffile>]
 
 	while ((opt = getopt(argc, argv, "l:c:p:")) != -1)
 	{
@@ -683,7 +715,8 @@ mainloop:
 			}
 			else
 				saratoga::scr.error("Could not send beacon");
-			beacontimer.reset(); //alterado
+			beacontimer.reset(); //alterado //TODO Ele nunca chega aqui!??
+
 		}
 
 		// Handle al of the c_xxxxxx these are the results of
@@ -780,6 +813,7 @@ mainloop:
 			else
 				saratoga::scr.error("Could not send ls");
 		}
+
 
 		// Remove directory
 		if (saratoga::c_rmdir.ready())

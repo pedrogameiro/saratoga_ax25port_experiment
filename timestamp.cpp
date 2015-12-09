@@ -31,6 +31,7 @@
 #include <iostream>
 #include <cstring>
 #include <string>
+#include <chrono>
 
 #include "saratoga.h"
 #include "sarflags.h"
@@ -39,6 +40,7 @@
 #include "timestamp.h"
 
 using namespace std;
+
 
 namespace saratoga
 {

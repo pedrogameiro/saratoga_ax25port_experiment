@@ -26,7 +26,8 @@ namespace timer_group
 	}
 
 	bool timer::elapsed(){//Falta fazer *********************************************
-		return false;
+		//return false;
+		return timedout();
 		//return (((saratoga::offset_t) clock() - begTime) / CLOCKS_PER_SEC) >= elapsedTime;
 	}
 	void timer::reset(){ begTime = chrono::steady_clock::now(); }
