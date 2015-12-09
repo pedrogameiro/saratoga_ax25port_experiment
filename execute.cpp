@@ -100,14 +100,14 @@ cli_beacon::execute()
 	if (ax25port != NULL ){
 
 		if ((ax25sock = socket(AF_AX25, SOCK_DGRAM, 0)) == -1) {
-			fprintf(stderr, "socket() error");
-			return 1;
+			scr.error( "socket() error");
+			//return 1;
 		}
 
 
 		if (bind(ax25sock, (struct sockaddr *)&src, ax25slen) == -1) {
-			fprintf(stderr, "bind() error");
-			return 1;
+			scr.error( "bind() error");
+			//return 1;
 		}
 
 		//ax25message = "hello";

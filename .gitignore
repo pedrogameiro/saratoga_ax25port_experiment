@@ -29,3 +29,6 @@
 *.app
 Debug/rcm
 
+#log
+saratoga.log
+
