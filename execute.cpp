@@ -49,6 +49,16 @@
 #include "globals.h"
 
 
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <time.h>
+
 
 
 
@@ -84,7 +94,6 @@ cli_beacon::timerexpired()
 }
 
 
-
 /*
  * Send beacons out
  */
@@ -98,27 +107,42 @@ cli_beacon::execute()
 	frame*	f;
 	sardir::fsinfo *fs = new sardir::fsinfo(".");
 
+// AX25
 
-	if (ax25port != NULL ){
-
-		if ((ax25sock = socket(AF_AX25, SOCK_DGRAM, 0)) == -1) {
-			scr.error( "socket() error");
-			//return 1;
+	if(ax25available){
+		// We always want the IP Address in the eid
+		eidstr = std::string(ax25address);
+		eidstr += " ";
+		eidstr += c_eid.eid();
+		// Do we wish to advertise free space
+		if (c_freespace.flag() == F_FREESPACE_YES)
+		{
+			f = new beacon(
+				c_descriptor.flag(),
+				c_stream.flag(),
+				c_tx.flag(),
+				c_rx.flag(),
+				fs,
+				eidstr);
+		}
+		else
+		{
+			f = new beacon(
+			c_descriptor.flag(),
+			c_stream.flag(),
+			c_tx.flag(),
+			c_rx.flag(),
+			eidstr);
 		}
 
 
-		if (bind(ax25sock, (struct sockaddr *)&src, ax25slen) == -1) {
-			scr.error( "bind() error");
-			//return 1;
-		}
+		saratoga::scr.msg(f->print());
 
-		//ax25message = "hello";
-
-		if (sendto(ax25sock, "hello", strlen(ax25message), 0, (struct sockaddr *)&dest, ax25dlen) == -1) {
-		 	scr.error("Cant send AX25 beacon!");
-		}else
-			scr.msg("[AX25] Beacon sent.");
+		char message[200]="hello\n";
+		sendax25message(message);
 	}
+
+
 
 
 

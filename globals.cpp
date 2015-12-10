@@ -84,6 +84,7 @@ cli_maxbuff	c_maxbuff;
 uint16_t sarport = 7542;
 string if_loop = "127.0.0.1";
 string if6_loop = "::1";
+string ax25dummyip = "0.0.0.0";
 string if_mcast = "224.0.0.108";
 string if6_mcast = "FF02:0:0:0:0:0:0:6c";
 
@@ -92,6 +93,8 @@ sarnet::udp*	v4out;
 sarnet::udp*	v4mcastout;
 sarnet::udp*	v6out;
 sarnet::udp*	v6mcastout;
+sarnet::udp*	v4ax24dummyout;
+
 
 sarnet::udp*	v4in;
 sarnet::udp*	v6in;
