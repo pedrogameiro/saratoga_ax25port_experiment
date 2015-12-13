@@ -1,1 +1,1 @@
-checksums/crc32driver.d: ../checksums/crc32driver.c
+checksums/crc32driver.o: ../checksums/crc32driver.c

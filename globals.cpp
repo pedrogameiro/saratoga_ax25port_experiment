@@ -95,7 +95,7 @@ sarnet::udp*	v6out;
 sarnet::udp*	v6mcastout;
 sarnet::udp*	v4ax24dummyout;
 
-
+sarnet::udp*	ax25multi;
 sarnet::udp*	v4in;
 sarnet::udp*	v6in;
 sarnet::udp*	v4loop;

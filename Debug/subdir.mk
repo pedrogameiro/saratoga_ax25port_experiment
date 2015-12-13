@@ -2,8 +2,9 @@
 # Automatically-generated file. Do not edit!
 ################################################################################
 
-# Add inputs and outputs from these tool invocations to the build variables
+# Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../ax25.cpp \
 ../beacon.cpp \
 ../checksum.cpp \
 ../cli.cpp \
@@ -35,9 +36,10 @@ CPP_SRCS += \
 ../test3.cpp \
 ../timer.cpp \
 ../timestamp.cpp \
-../tran.cpp
+../tran.cpp 
 
 OBJS += \
+./ax25.o \
 ./beacon.o \
 ./checksum.o \
 ./cli.o \
@@ -69,9 +71,10 @@ OBJS += \
 ./test3.o \
 ./timer.o \
 ./timestamp.o \
-./tran.o
+./tran.o 
 
 CPP_DEPS += \
+./ax25.d \
 ./beacon.d \
 ./checksum.d \
 ./cli.d \
@@ -103,14 +106,15 @@ CPP_DEPS += \
 ./test3.d \
 ./timer.d \
 ./timestamp.d \
-./tran.d
+./tran.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
 %.o: ../%.cpp
 	@echo 'Building file: $<'
-	@echo 'Invoking: GCC C++ Compiler'
-	g++ -O0 -g3 -Wall -c -fmessage-length=0 -lax25 -std=c++11 -g -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	@echo 'Invoking: Cross G++ Compiler'
+	g++ -O0 -g3 -Wall -c -fmessage-length=0 -std=c++11 -lax25 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
+
 
