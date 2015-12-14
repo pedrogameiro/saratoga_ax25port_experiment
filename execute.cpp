@@ -107,9 +107,9 @@ cli_beacon::execute()
 	beacon*	f;
 	sardir::fsinfo *fs = new sardir::fsinfo(".");
 
-// AX25
-
+	// AX25
 	if(sarnet::ax25::ax25available){
+		scr.msgout("Trying to send AX25 beacon");
 		// We always want the AX25 Address in the eid
 		eidstr = std::string(sarnet::ax25::ax25srcaddress);
 		eidstr += " ";
@@ -117,6 +117,7 @@ cli_beacon::execute()
 		// Do we wish to advertise free space
 		if (c_freespace.flag() == F_FREESPACE_YES)
 		{
+			scr.msgout("Creating AX25 FREESPACE Beacon");
 			f = new beacon(
 				c_descriptor.flag(),
 				c_stream.flag(),
@@ -127,6 +128,7 @@ cli_beacon::execute()
 		}
 		else
 		{
+			scr.msgout("Creating AX25 NOFREESPACE Beacon");
 			f = new beacon(
 			c_descriptor.flag(),
 			c_stream.flag(),

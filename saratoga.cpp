@@ -989,9 +989,9 @@ mainloop:
 		// Multicast Outputs
 		if (c_multicast.state() == true)
 		{
-
 			// Send AX25 Multicast stuff.
-			ax25multi->send();
+			if (sarnet::ax25::ax25available)
+				ax25multi->send();
 
 
 			// Handle V4 Multicast Output frames
