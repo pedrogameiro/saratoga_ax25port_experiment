@@ -32,5 +32,5 @@ bin/rcm
 
 #log
 saratoga.log
-Debug/saratoga.conf.tmp
+saratoga.conf.tmp
 
