@@ -111,6 +111,9 @@ extern const string	if6_mcast;
 extern sarnet::udp*	v4out;
 extern sarnet::udp*	v4ax25dummy;
 
+extern sarnet::ax25* ax25multi;
+extern sarnet::ax25* ax25in;
+extern sarnet::ax25* ax25out;
 extern sarnet::udp*	v4mcastout;
 extern sarnet::udp*	v6out;
 extern sarnet::udp*	v6mcastout;

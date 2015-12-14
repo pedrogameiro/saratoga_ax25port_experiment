@@ -60,33 +60,6 @@ namespace saratoga
 {
 
 bool	resizeset = false;
-// AX25
-bool ax25available = false;
-char* ax25port = "spacelink" ;
-char* ax25destcall = "ALL";
-char *ax25portcall = NULL;
-struct full_sockaddr_ax25 ax25dest;
-struct full_sockaddr_ax25 ax25src;
-char *ax25address;
-int ax25slen, ax25dlen, ax25sock;
-
-int sendax25message(char* ax25message) {
-	// AX25
-		if (ax25available){
-
-			// Send
-			if (sendto(ax25sock, ax25message, strlen(ax25message), 0, (struct sockaddr *)&ax25dest, ax25dlen) == -1) {
-				saratoga::scr.error("[AX25] Cant send AX25 beacon!");
-				return 1;
-			}else{
-				saratoga::scr.msg("[AX25] Beacon sent.");
-				return 0;
-			}
-
-		}else
-			return 0;
-
-}
 
 // Work out what frame type we have read and handle it
 // If the # if fd's change then return true so we know in our mainloop
@@ -408,6 +381,8 @@ initialise(string logname, string confname)
 		sleep(3);
 	}
 
+	sarnet::ax25::initax25();
+
 	// IPv4 listening input socket
 	v4in = new sarnet::udp(AF_INET, sarport);
 	if (v4in->fd() < 0)
@@ -544,43 +519,6 @@ main(int argc, char **argv)
 	string logname = "../saratoga.log"; // Default log file name
 	string confname = "../saratoga.conf"; // Default config file name
 
-// AX25
-	if (ax25_config_load_ports() == 0) {
-		saratoga::scr.error("[AX25] No AX.25 ports defined\n");
-		goto noax25;
-	}else {
-
-		//Bootstrap
-		if ((ax25portcall = ax25_config_get_addr(ax25port)) == NULL) {
-			saratoga::scr.error("[AX25] Invalid AX.25 port \n"+ string(ax25port) );
-			goto noax25;
-		}
-		if ((ax25dlen = ax25_aton(ax25destcall, &ax25dest)) == -1) {
-			saratoga::scr.error("[AX25] Unable to convert destination callsign \n" + string(ax25destcall));
-			goto noax25;
-		}
-		if ((ax25slen = ax25_aton(ax25portcall, &ax25src)) == -1) {
-			saratoga::scr.error("[AX25] Unable to convert source callsign \n" + string(ax25portcall));
-			goto noax25;
-		}
-
-		// Prepare
-		if ((ax25sock = socket(AF_AX25, SOCK_DGRAM, 0)) == -1) {
-			saratoga::scr.error( "[AX25] socket() error");
-			return 1;
-		}
-		if (bind(ax25sock, (struct sockaddr *)&ax25src, ax25slen) == -1) {
-			saratoga::scr.error( "[AX25] bind() error");
-			return 1;
-		}
-
-		ax25address = ax25_ntoa(&ax25src.fsa_ax25.sax25_call);
-		ax25available=true;
-		saratoga::scr.msg("[AX25] AX.25 started with success.\n");
-	}
-
-noax25:
-// Done
 
 	// Handle command line input args
 	// to set udp port log file and config file names
@@ -1046,9 +984,16 @@ mainloop:
 				goto mainloop;
 		}
 
+
+
 		// Multicast Outputs
 		if (c_multicast.state() == true)
 		{
+
+			// Send AX25 Multicast stuff.
+			ax25multi->send();
+
+
 			// Handle V4 Multicast Output frames
 			if (FD_ISSET(v4mcastout->fd(), &cwfd))
 			{
