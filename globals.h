@@ -115,7 +115,6 @@ extern sarnet::udp*	v4mcastout;
 extern sarnet::udp*	v6out;
 extern sarnet::udp*	v6mcastout;
 
-extern sarnet::udp*	ax25multi;
 extern sarnet::udp*	v4in;
 extern sarnet::udp*	v6in;
 extern sarnet::udp*	v4loop;

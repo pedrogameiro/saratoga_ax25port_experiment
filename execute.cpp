@@ -109,9 +109,9 @@ cli_beacon::execute()
 
 // AX25
 
-	if(sarnet::ax25::isax25available()){
-		// We always want the AX25 Address in the eid
-		eidstr = sarnet::ax25::getax25srcaddr();
+	if(ax25available){
+		// We always want the IP Address in the eid
+		eidstr = std::string(ax25address);
 		eidstr += " ";
 		eidstr += c_eid.eid();
 		// Do we wish to advertise free space
@@ -136,12 +136,10 @@ cli_beacon::execute()
 		}
 
 
-		if (f->tx(ax25multi) < 0)
-		 	scr.error("Cant queue a multicast ax25 beacon");
-		else
-			scr.msgout("cli_beacon::execute() Sending ax25 Multicast Beacon EID %s", eidstr.c_str());
-		delete f;
+		saratoga::scr.msg(f->print());
 
+		char message[200]="hello\n";
+		sendax25message(message);
 	}
 
 

@@ -40,10 +40,10 @@
 #include <string>
 #include <string.h>
 #include <list>
-#include "ax25.h"
 
-
-
+#include <netax25/axlib.h>
+#include <netax25/ax25.h>
+#include <netax25/axconfig.h>
 
 /* 
  * At this stage we do not support 128 bit descriptors but the code is
@@ -66,6 +66,16 @@ extern int			debuglevel();
 namespace saratoga 
 {	// AX25
 
+extern char* ax25address;
+extern bool ax25available;
+extern char* ax25port;
+extern char* ax25destcall;
+extern char *ax25portcall;
+extern struct full_sockaddr_ax25 ax25dest;
+extern struct full_sockaddr_ax25 ax25src;
+extern int ax25slen, ax25dlen, ax25sock;
+
+int sendax25message(char* ax25message);
 
 
 
