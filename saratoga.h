@@ -64,20 +64,7 @@ extern int			debuglevel();
 //using namespace std;
 
 namespace saratoga 
-{	// AX25
-
-extern char* ax25address;
-extern bool ax25available;
-extern char* ax25port;
-extern char* ax25destcall;
-extern char *ax25portcall;
-extern struct full_sockaddr_ax25 ax25dest;
-extern struct full_sockaddr_ax25 ax25src;
-extern int ax25slen, ax25dlen, ax25sock;
-
-int sendax25message(char* ax25message);
-
-
+{
 
 typedef uint32_t		flag_t;		// Saratoga Flags
 typedef uint16_t		dflag_t;	// Directory Flags

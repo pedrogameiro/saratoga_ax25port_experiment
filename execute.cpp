@@ -104,14 +104,14 @@ cli_beacon::execute()
 
 	string 	eidstr;
 
-	frame*	f;
+	beacon*	f;
 	sardir::fsinfo *fs = new sardir::fsinfo(".");
 
 // AX25
 
-	if(ax25available){
-		// We always want the IP Address in the eid
-		eidstr = std::string(ax25address);
+	if(sarnet::ax25::ax25available){
+		// We always want the AX25 Address in the eid
+		eidstr = std::string(sarnet::ax25::ax25srcaddress);
 		eidstr += " ";
 		eidstr += c_eid.eid();
 		// Do we wish to advertise free space
@@ -136,10 +136,11 @@ cli_beacon::execute()
 		}
 
 
-		saratoga::scr.msg(f->print());
-
-		char message[200]="hello\n";
-		sendax25message(message);
+		if (f->tx(ax25multi) < 0)
+		 	scr.error("Cant queue a multicast AX25 beacon");
+		else
+			scr.msgout("cli_beacon::execute() Sending AX25 Multicast Beacon EID %s", eidstr.c_str());
+		delete f;
 	}
 
 

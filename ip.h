@@ -624,21 +624,18 @@ public:
 	string print();
 };
 
+
+
 class ax25 : public udp
 {
 private:
 
 	//AX25lib
 	// AX25
-	static bool ax25available;
+	static struct full_sockaddr_ax25 ax25src;
 	static char* ax25portcall;
 	static int ax25slen;
-	static char* ax25srcaddress;
-	static struct full_sockaddr_ax25 ax25src;
-	static int	ax25sock; 		// file descriptor
 
-	static constexpr char* ax25port = "spacelink" ;
-	static constexpr char* ax25multidestcall = "ALL";
 
 	struct full_sockaddr_ax25 ax25dest;
 	char *ax25destcall;
@@ -651,6 +648,8 @@ private:
 	bool	_readytotx;	// Sets FD_SET() or FD_CLR() for tx
 	timer_group::timer	*_delay;	// Used to implement a delay between sending frames
 
+	static constexpr char* ax25port = "spacelink" ;
+	static constexpr char* ax25multidestcall = "ALL";
 	static const ssize_t		_jumbosize = 8192; // Jumbo ethernet frame size
 	static const ssize_t		_ethsize = 1500; // Normal ethernet frame size
 	static const ssize_t		_udpheader = 8; // Size of the udp header
@@ -669,11 +668,12 @@ private:
 	};
 public:
 
+	static int ax25sock;
+	static bool ax25available;
+	static char* ax25srcaddress;
 
-	static char* getax25srcaddr(){return ax25::ax25srcaddress; }
-	static bool isax25available(){return ax25::ax25available;}
+
 	static int initax25();
-
 	ax25(char* dest);
 
 	~ax25() { this->zap(); };
