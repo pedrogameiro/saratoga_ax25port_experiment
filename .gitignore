@@ -28,7 +28,9 @@
 *.out
 *.app
 Debug/rcm
+bin/rcm
 
 #log
 saratoga.log
+Debug/saratoga.conf.tmp
 
