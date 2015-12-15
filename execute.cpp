@@ -138,7 +138,7 @@ cli_beacon::execute()
 		}
 
 
-		if (f->tx((sarnet::udp*)ax25multi) < 0)
+		if (f->tx((sarnet::udp*)ax25multiout) < 0)
 		 	scr.error("Cant queue a multicast AX25 beacon");
 		else
 			scr.msgout("cli_beacon::execute() AX25 Multicast Beacon in buffer EID %s", eidstr.c_str());

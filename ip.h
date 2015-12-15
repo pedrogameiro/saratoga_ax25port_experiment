@@ -49,6 +49,17 @@
 #include <ifaddrs.h>
 #include <netdb.h>
 
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <string.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <linux/if_ether.h>
+
+
 #include <netax25/axlib.h>
 #include <netax25/ax25.h>
 #include <netax25/axconfig.h>
@@ -292,7 +303,7 @@ public:
 	struct in_addr *addr4() { return &_ip.v4; };
 	struct in6_addr *addr6() { return &_ip.v6; };
 
-	string	straddr();
+	virtual string	straddr();
 	string	print();
 };
 
@@ -621,9 +632,11 @@ public:
 	bool	fdchange() { return(_fdchange); };
 	bool	fdchange(bool state) { _fdchange = state; return(_fdchange); };
 
-	// Does the peer match an IP address
+	// Does the setsockoptpeer match an IP address
+	sarnet::udp	*matchsetsockopt(ip *host);
 	sarnet::udp	*match(ip *host);
 	sarnet::udp	*match(string addr);
+
 
 	// Print all the open sockets info
 	string print();
@@ -638,17 +651,19 @@ private:
 	//AX25lib
 	// AX25
 	static struct full_sockaddr_ax25 ax25src;
+	struct full_sockaddr_ax25 ax25dest;
+
 	static char* ax25portcall;
 	static int ax25slen;
 	static char* dev;
 
 
-	struct full_sockaddr_ax25 ax25dest;
-	char *ax25destcall;
+	char* ax25destcall;
 	int ax25dlen;
 
 	struct sockaddr_storage	_sa; // sockaddr info and it is big enough to hold v4 & v6 info
-	int	_fd; // file descriptor
+	int _fd ; // file descriptor
+
 
 	std::list<saratoga::buffer>	_bufax25; // Frames queued to send
 	bool	_readytotx;	// Sets FD_SET() or FD_CLR() for tx
@@ -675,14 +690,16 @@ private:
 	};
 public:
 
-	static int ax25insock;
 	static int ax25outsock;
+	static int ax25insock;
 	static bool ax25available;
 	static char* ax25srcaddress;
 
 
 	static int initax25();
 	ax25(char* dest);
+	ax25();
+
 
 	~ax25() { this->zap(); };
 
@@ -724,13 +741,13 @@ public:
 
 	// Receive a buffer, return # chars sent -
 	// You catch the error if <0
-	ssize_t	rx(char* b, sarnet::ip *from);
+	virtual ssize_t	rx(char* b, sarnet::ip *from) override ;
 
 	// Socket #
 	int port();
 
 	// fd
-	int	fd() { return(_fd); };
+	int	fd() { return(ax25insock); };
 
 	// Actually transmit the frames in the buffers
 	virtual int send() override;
@@ -763,6 +780,44 @@ public:
 	string print();
 };
 
+class ax25addr : public ip
+{
+private:
+	const int OTHER	= -1;
+	union in_storage	_ip; // The IP in_addr or in6_addr data
+	int	_family = AF_INET; // What are V4 or V6 or OTHER
+	string _ax25addr;
+public:
+
+	ax25addr(string addr) {
+		bzero(&_ip.v4, sizeof(struct in_addr));
+		_ax25addr = addr;
+
+		return;
+	};
+
+
+	~ax25addr() {
+		bzero(&_ip, sizeof(union in_storage)); _family = OTHER;
+	};
+
+	void zap() {
+		bzero(&_ip, sizeof(union in_storage)); _family = OTHER;
+	}
+
+	// What are we v4 or v6
+	int family() { return(_family); };
+	bool isother() { return(_family == OTHER); };
+	bool isv4() { return(_family == AF_INET); };
+	bool isv6() { return(_family == AF_INET6); };
+	struct in_addr *addr4() { return &_ip.v4; };
+	struct in6_addr *addr6() { return &_ip.v6; };
+
+	virtual string	straddr(){
+		return _ax25addr;
+	}
+	string	print();
+};
 
 
 }; // Namespace sarnet

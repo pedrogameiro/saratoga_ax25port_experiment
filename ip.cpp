@@ -1195,13 +1195,13 @@ peers::match(string addr)
  *************************************/
 
 
-int ax25::ax25insock;
+int ax25::ax25outsock;
 char* ax25::ax25srcaddress;
 struct full_sockaddr_ax25 ax25::ax25src;
 bool ax25::ax25available = false;
 char* ax25::ax25portcall;
 int ax25::ax25slen;
-int ax25::ax25outsock;
+int ax25::ax25insock;
 char* ax25::dev;
 
 
@@ -1220,53 +1220,40 @@ int ax25::initax25(){
 			return -1;
 		}
 
-		// Prepare in socket
+		// Prepare out socket
 		if ((ax25slen = ax25_aton(ax25portcall, &ax25src)) == -1) {
 			saratoga::scr.error("[AX25] Unable to convert source callsign \n" + string(ax25portcall));
 			return -1;
 		}
-		if ((ax25insock = socket(AF_AX25, SOCK_DGRAM, 0)) == -1) {
+		if ((ax25outsock = socket(AF_AX25, SOCK_DGRAM, 0)) == -1) {
 			saratoga::scr.error( "[AX25] socket() error");
 			return -1;
 		}
-		if (bind(ax25insock, (struct sockaddr *)&ax25src, ax25slen) == -1) {
+		if (bind(ax25outsock, (struct sockaddr *)&ax25src, ax25slen) == -1) {
 			saratoga::scr.error( "[AX25] bind() error");
 			return -1;
 		}
 
-
-		// Prepare out socket
-//		if ((dev = ax25_config_get_dev(ax25port)) == NULL) {
-//			saratoga::scr.error("AX25 could not init outsocket: invalid port name \n");
-//			return 1;
-//		}
-//		if ((ax25outsock = socket(PF_PACKET, SOCK_PACKET, htons(proto))) == -1) {
-//			saratoga::scr.error("AX25 could not init outsocket \n");
-//			return 1;
-//		}
-//		struct sockaddr sa;
-//		socklen_t asize = sizeof(sa);
-//		int s, size;
-//
-//		char buffer[1500];
-//		memset(buffer, 0, sizeof(buffer));
-//
-//		while (1){
-//
-//	if (size = recvfrom(ax25outsock, buffer, sizeof(buffer), 0, &sa,	&asize) != -1){
-//		string ss = buffer;
-//		saratoga::scr.msg(std::to_string(size));
-//		saratoga::scr.msg(ss);
-//	}else
-//		saratoga::scr.msg("fuck");
-//
-//		}
-
 		ax25srcaddress = ax25_ntoa(&ax25src.fsa_ax25.sax25_call);
+
+
+
+		// Prepare in socket
+		if ((dev = ax25_config_get_dev(ax25port)) == NULL) {
+			saratoga::scr.error("AX25 could not init outsocket: invalid port name \n");
+			return 1;
+		}
+		if ((ax25insock = socket(PF_PACKET, SOCK_PACKET, htons(proto))) == -1) {
+			saratoga::scr.error("AX25 could not init outsocket \n"+to_string(ax25insock));
+			return 1;
+		}
+
+
 		ax25available=true;
+		saratoga::ax25multiout = new sarnet::ax25(ax25::ax25multidestcall);
+		saratoga::ax25multiin = new sarnet::ax25();
 		saratoga::scr.msg("[AX25] AX.25 started with success.\n");
 
-		saratoga::ax25multi = new sarnet::ax25(ax25::ax25multidestcall);
 
 	}
 
@@ -1274,7 +1261,7 @@ int ax25::initax25(){
 }
 
 
-
+// For out socket.
 ax25::ax25(char* destcall)
 {
 
@@ -1306,6 +1293,34 @@ ax25::ax25(char* destcall)
 	_readytotx = false;
 	_bufax25.empty(); // No buffers either
 	_delay = new timer_group::timer(0); // No timer
+	_fd=ax25outsock;
+
+}
+
+// For in socket
+ax25::ax25()
+{
+
+	// IP Stuff
+	string addr = "0.0.0.0";
+	int port= sarport;
+
+	const int	on = 1;
+	struct sockaddr_in *in = (sockaddr_in *) &_sa;
+	struct protoent	*proto;
+
+	ip	ipa(addr);
+	proto = getprotobyname("UDP");
+	_readytotx = false;
+	_delay = new timer_group::timer(addr, c_timer.framedelay());
+	memcpy(&in->sin_addr, ipa.addr4(), sizeof(struct in_addr));
+	in->sin_family = AF_INET;
+	in->sin_port = htons(port);
+
+	_readytotx = false;
+	_bufax25.empty(); // No buffers either
+	_delay = new timer_group::timer(0); // No timer
+	_fd=ax25insock;
 
 }
 
@@ -1343,7 +1358,7 @@ ax25::strport()
 int
 ax25::send()
 {
-	saratoga::scr.msg("[AX25] send() entered.");
+	saratoga::scr.msg("send() entry");
 	// static socklen_t	tolen;
 	socklen_t	tolen;
 	ssize_t			nwritten;
@@ -1381,7 +1396,7 @@ ax25::send()
 		{
 			//nwritten = sendto(_fd, b, blen, flags, this->saptr(), tolen);
 			saratoga::scr.msg("[AX25] sendto AX25 something!");
-			nwritten = sendto(ax25::ax25insock, b, blen, flags, (struct sockaddr *)&ax25dest, ax25dlen);
+			nwritten = sendto(ax25::ax25outsock, b, blen, flags, (struct sockaddr *)&ax25dest, ax25dlen);
 			if (nwritten < 0)
 			{
 				int err = errno;
@@ -1414,39 +1429,27 @@ ssize_t
 ax25::rx(char *b, sarnet::ip *from)
 {
 
-	string			s;
+	struct sockaddr sa;
+	socklen_t asize = sizeof(sa);
+	int nread;
 
-	struct sockaddr_storage	addrbuf;
 
-	socklen_t		socklen;
-	ssize_t			nread;
-	int			flags = MSG_DONTWAIT;
-
-	s = "Receiving interface " + this->print();
-	saratoga::scr.debug(2, s);
-	switch (this->family())
-	{
-	case AF_INET:
-		socklen = sizeof (struct sockaddr_in);
-		break;
-	case AF_INET6:
-		socklen = sizeof (struct sockaddr_in6);
-		break;
-	default:
-		saratoga::scr.error("udp::rx() Invalid family");
+	if ((nread = recvfrom(ax25insock, b, sizeof(b), 0, &sa, &asize)) == -1) {
+		saratoga::scr.error("Could not read from ax25insock!");
 		return -1;
 	}
 
-	nread = recvfrom(_fd, b, 9000, flags, (struct sockaddr *) &addrbuf, &socklen);
+	string addr = sa.sa_data;
+	saratoga::scr.msg("Received beacon from "+addr);
 
-	sarnet::ip retaddr(&addrbuf);
-	*from = retaddr;
-	s = retaddr.straddr();
-	saratoga::scr.debug(7, "udp::rx(): Received %d bytes from %s", nread, s.c_str());
+
+
+	from = new sarnet::ax25addr(addr);
+	saratoga::scr.debug(7, "udp::rx(): Received %d bytes from %s", nread, addr);
 	if (nread < 0)
 	{
 		int err = errno;
-		saratoga::scr.perror(err, "udp::rx(): Cannot read\n");
+		saratoga::scr.perror(err, "ax25::rx(): Cannot read\n");
 	}
 
 	return(nread);
@@ -1512,8 +1515,10 @@ ax25::getopt(int option, void *optval, socklen_t *optlen) {
 string
 ax25::print()
 {
+
+	string ret = "UDP:AX25";
+
 	char	tmp[128];
-	string ret = "UDP:";
 
 	switch(this->family())
 	{

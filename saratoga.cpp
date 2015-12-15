@@ -65,7 +65,7 @@ bool	resizeset = false;
 // If the # if fd's change then return true so we know in our mainloop
 // to redo the select()
 bool
-readhandler(string from, char *buf, size_t len)
+readhandler(sarnet::ip ip, char *buf, size_t len)
 {
 	flag_t	flags;
 	sarnet::udp *sock; // Where we want to create a socket to for writing
@@ -75,7 +75,9 @@ readhandler(string from, char *buf, size_t len)
 	// What is the source IP of this frame
 	// Add it into our list of peers and open a socket to the peer (to)
 	// if not already there
-	ipaddr = new sarnet::ip(from);
+	ipaddr = &ip;
+	string from = ipaddr->straddr();
+	//ipaddr = new sarnet::ip(from);
 	if ((sock = sarpeers.match(ipaddr)) == nullptr)
 	{
 		sarpeers.add(ipaddr, sarport);
@@ -619,6 +621,14 @@ mainloop:
 		FD_SET(v6mcastin->fd(), &crfd);
 		v6mcastin->ready(true);
 
+		// AX25
+		if(sarnet::ax25::ax25available){
+			FD_SET(ax25multiin->fd(), &crfd);
+			ax25multiin->ready(true);
+			(ax25multiout->ready()) ? FD_SET(ax25multiout->fd(), &cwfd) : FD_CLR(ax25multiout->fd(), &cwfd);
+
+		}
+
 		(sarlog->ready()) ? FD_SET(sarlog->fd(), &cwfd) : FD_CLR(sarlog->fd(), &cwfd);	
 		(v4out->ready()) ? FD_SET(v4out->fd(), &cwfd) : FD_CLR(v4out->fd(), &cwfd);
 		(v6out->ready()) ? FD_SET(v6out->fd(), &cwfd) : FD_CLR(v6out->fd(), &cwfd);
@@ -943,9 +953,12 @@ mainloop:
 			string	s = from->straddr();
 			saratoga::scr.debug(7, "main(): v4in Read %d bytes from %s",
 				sz, s.c_str());
-			delete from;
-			if (saratoga::readhandler(s, buf, sz) && fdchange())
+			if (saratoga::readhandler(from, buf, sz) && fdchange()){
+				delete from;
 				goto mainloop;
+			}else
+				delete from;
+
 		}
 		// Handle V4 Input Multicast frames
 		if (FD_ISSET(v4mcastin->fd(), &crfd))
@@ -955,22 +968,27 @@ mainloop:
 			string	s = from->straddr();
 			saratoga::scr.debug(7, "main(): v4mcastin Read %d bytes from %s",
 				sz, s.c_str());
-			delete from;
-			if (saratoga::readhandler(s, buf, sz) && fdchange())
+			if (saratoga::readhandler(from, buf, sz) && fdchange()){
+				delete from;
 				goto mainloop;
+			}else
+				delete from;
 		}
 		// Handle AX25 Input Multicast frames
-		/*if (FD_ISSET(v4mcastin->fd(), &crfd))
+		//if (FD_ISSET(v4mcastin->fd(), &crfd))
+		if(sarnet::ax25::ax25available && FD_ISSET(ax25multiout->fd(), &crfd))
 		{
-			sarnet::ip	*from = new sarnet::ip();
-			sz = v4mcastin->rx(buf, from);
+			sarnet::ip	*from;
+			sz = ax25multiout->rx(buf,from);
 			string	s = from->straddr();
 			saratoga::scr.debug(7, "main(): v4mcastin Read %d bytes from %s",
 				sz, s.c_str());
-			delete from;
-			if (saratoga::readhandler(s, buf, sz) && fdchange())
+			if (saratoga::readhandler(from, buf, sz) && fdchange()){
+				delete from;
 				goto mainloop;
-		}*/
+			}else
+				delete from;
+		}
 		// Handle V6 Input frames
 		if (FD_ISSET(v6in->fd(), &crfd))
 		{
@@ -979,9 +997,11 @@ mainloop:
 			string	s = from->straddr();
 			saratoga::scr.debug(7, "main(): v6in Read %d bytes from %s",
 				sz, s.c_str());
-			delete from;
-			if (saratoga::readhandler(s, buf, sz) && fdchange())
+			if (saratoga::readhandler(from, buf, sz) && fdchange()){
+				delete from;
 				goto mainloop;
+			}else
+				delete from;
 		}
 		// Handle V6 Input Multicast frames
 		if (FD_ISSET(v6mcastin->fd(), &crfd))
@@ -991,9 +1011,11 @@ mainloop:
 			string	s = from->straddr();
 			saratoga::scr.debug(7, "main(): v6mcastin Read %d bytes from %s",
 				sz, s.c_str());
-			delete from;
-			if (saratoga::readhandler(s, buf, sz) && fdchange()) //;
+			if (saratoga::readhandler(from, buf, sz) && fdchange()){
+				delete from;
 				goto mainloop;
+			}else
+				delete from;
 		}
 
 
@@ -1002,9 +1024,13 @@ mainloop:
 		if (c_multicast.state() == true)
 		{
 			// Send AX25 Multicast stuff.
-			if (sarnet::ax25::ax25available)
-				ax25multi->send();
+			if (sarnet::ax25::ax25available && FD_ISSET(ax25multiout->fd(), &cwfd)){
 
+				if ((sz = ax25multiout->send()) > 0)
+					saratoga::scr.debug(7, "main(): ax25multiout Wrote %d bytes", sz);
+				else
+					ax25multiout->ready(false);
+			}
 
 			// Handle V4 Multicast Output frames
 			if (FD_ISSET(v4mcastout->fd(), &cwfd))
