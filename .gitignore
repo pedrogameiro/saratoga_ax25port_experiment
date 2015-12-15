@@ -29,8 +29,10 @@
 *.app
 Debug/rcm
 bin/rcm
+bin-i386/rcm-i386
 
 #log
 saratoga.log
 saratoga.conf.tmp
+
 

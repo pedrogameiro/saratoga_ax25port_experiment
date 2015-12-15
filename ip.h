@@ -712,7 +712,7 @@ public:
 
 	// What are we v4 or v6
 	int family() {
-		return AF_INET;
+		return AF_AX25;
 	};
 
 	// Handle integer setsockopt
@@ -785,9 +785,15 @@ class ax25addr : public ip
 private:
 	const int OTHER	= -1;
 	union in_storage	_ip; // The IP in_addr or in6_addr data
-	int	_family = AF_INET; // What are V4 or V6 or OTHER
+	int	_family = AF_AX25; // What are V4 or V6 or OTHER
 	string _ax25addr;
 public:
+
+	// Dummy, missing addr.
+	ax25addr(){
+		bzero(&_ip.v4, sizeof(struct in_addr));
+		return;
+	}
 
 	ax25addr(string addr) {
 		bzero(&_ip.v4, sizeof(struct in_addr));
@@ -805,6 +811,111 @@ public:
 		bzero(&_ip, sizeof(union in_storage)); _family = OTHER;
 	}
 
+
+	// Assignment via x = y;
+	ip& operator =(const ip& addr) {
+		_family = addr._family;
+		bzero(&_ip, sizeof(union in_storage));
+		bcopy(&addr._ip, &_ip, sizeof(union in_storage));
+		return(*this);
+	};
+
+	// True is ip x == y
+	bool operator ==(const ip &rhs)
+	{
+		return &rhs typeof ax25addr;
+
+		if (_family != rhs._family)
+			return(false);
+		if (_family == AF_INET)
+		{
+			typeof
+			if (memcmp(&_ip, &rhs._ip.v4, sizeof(struct in_addr)) != 0)
+				return(false);
+			return(true);
+		}
+		if (_family == AF_INET6)
+		{
+			if (memcmp(&_ip, &rhs._ip.v6, sizeof(struct in6_addr)) != 0)
+				return(false);
+			return(true);
+		}
+		if (_family == OTHER)
+			return(false);
+		return(false);
+	};
+
+	bool operator ==(const string s)
+	{
+		ip	tmp(s);
+
+		if (tmp._family != AF_INET && tmp._family != AF_INET6)
+			return(false);
+
+		if (_family != tmp._family)
+			return(false);
+		if (_family == AF_INET)
+		{
+			if (memcmp(&_ip, &tmp._ip.v4, sizeof(struct in_addr)) != 0)
+				return(false);
+			return(true);
+		}
+		if (_family == AF_INET6)
+		{
+			if (memcmp(&_ip, &tmp._ip.v6, sizeof(struct in6_addr)) != 0)
+				return(false);
+			return(true);
+		}
+		return(false);
+	}
+
+	// True is ip x != y
+	bool operator !=(const ip &rhs)
+	{
+		if (_family != rhs._family)
+			return(true);
+		if (_family == AF_INET)
+		{
+			if (memcmp(&_ip, &rhs._ip.v4, sizeof(struct in_addr)) != 0)
+				return(true);
+			return(false);
+		}
+		if (_family == AF_INET6)
+		{
+			if (memcmp(&_ip, &rhs._ip.v6, sizeof(struct in6_addr)) != 0)
+				return(true);
+			return(false);
+		}
+		if (_family == OTHER)
+			return(true);
+		return(true);
+	}
+
+	bool operator !=(const string s)
+	{
+		ip	tmp(s);
+
+		if (tmp._family != AF_INET && tmp._family != AF_INET6)
+			return(true);
+
+		if (_family != tmp._family)
+			return(true);
+		if (_family == AF_INET)
+		{
+			if (memcmp(&_ip, &tmp._ip.v4, sizeof(struct in_addr)) != 0)
+				return(true);
+			return(false);
+		}
+		if (_family == AF_INET6)
+		{
+			if (memcmp(&_ip, &tmp._ip.v6, sizeof(struct in6_addr)) != 0)
+				return(true);
+			return(false);
+		}
+		return(true);
+	}
+
+
 	// What are we v4 or v6
 	int family() { return(_family); };
 	bool isother() { return(_family == OTHER); };
@@ -816,6 +927,7 @@ public:
 	virtual string	straddr(){
 		return _ax25addr;
 	}
+
 	string	print();
 };
 
