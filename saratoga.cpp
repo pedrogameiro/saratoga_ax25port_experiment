@@ -959,6 +959,18 @@ mainloop:
 			if (saratoga::readhandler(s, buf, sz) && fdchange())
 				goto mainloop;
 		}
+		// Handle AX25 Input Multicast frames
+		/*if (FD_ISSET(v4mcastin->fd(), &crfd))
+		{
+			sarnet::ip	*from = new sarnet::ip();
+			sz = v4mcastin->rx(buf, from);
+			string	s = from->straddr();
+			saratoga::scr.debug(7, "main(): v4mcastin Read %d bytes from %s",
+				sz, s.c_str());
+			delete from;
+			if (saratoga::readhandler(s, buf, sz) && fdchange())
+				goto mainloop;
+		}*/
 		// Handle V6 Input frames
 		if (FD_ISSET(v6in->fd(), &crfd))
 		{

@@ -109,7 +109,7 @@ cli_beacon::execute()
 
 	// AX25
 	if(sarnet::ax25::ax25available){
-		scr.msgout("Trying to send AX25 beacon");
+		scr.msgout("Trying to queue AX25 beacon");
 		// We always want the AX25 Address in the eid
 		eidstr = std::string(sarnet::ax25::ax25srcaddress);
 		eidstr += " ";
@@ -138,10 +138,10 @@ cli_beacon::execute()
 		}
 
 
-		if (f->tx(ax25multi) < 0)
+		if (f->tx((sarnet::udp*)ax25multi) < 0)
 		 	scr.error("Cant queue a multicast AX25 beacon");
 		else
-			scr.msgout("cli_beacon::execute() Sending AX25 Multicast Beacon EID %s", eidstr.c_str());
+			scr.msgout("cli_beacon::execute() AX25 Multicast Beacon in buffer EID %s", eidstr.c_str());
 		delete f;
 	}
 

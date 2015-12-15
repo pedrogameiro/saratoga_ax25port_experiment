@@ -34,6 +34,8 @@
 #include "screen.h"
 #include "ip.h"
 #include "globals.h"
+#include <sys/socket.h>
+
 
 using namespace std;
 
@@ -1193,12 +1195,15 @@ peers::match(string addr)
  *************************************/
 
 
-int ax25::ax25sock;
+int ax25::ax25insock;
 char* ax25::ax25srcaddress;
 struct full_sockaddr_ax25 ax25::ax25src;
 bool ax25::ax25available = false;
 char* ax25::ax25portcall;
 int ax25::ax25slen;
+int ax25::ax25outsock;
+char* ax25::dev;
+
 
 
 
@@ -1214,20 +1219,48 @@ int ax25::initax25(){
 			saratoga::scr.error("[AX25] Invalid AX.25 port \n"+ string(ax25port) );
 			return -1;
 		}
+
+		// Prepare in socket
 		if ((ax25slen = ax25_aton(ax25portcall, &ax25src)) == -1) {
-			//saratoga::scr.error("[AX25] Unable to convert source callsign \n" + string(ax25portcall));
+			saratoga::scr.error("[AX25] Unable to convert source callsign \n" + string(ax25portcall));
 			return -1;
 		}
-
-		// Prepare
-		if ((ax25sock = socket(AF_AX25, SOCK_DGRAM, 0)) == -1) {
+		if ((ax25insock = socket(AF_AX25, SOCK_DGRAM, 0)) == -1) {
 			saratoga::scr.error( "[AX25] socket() error");
 			return -1;
 		}
-		if (bind(ax25sock, (struct sockaddr *)&ax25src, ax25slen) == -1) {
+		if (bind(ax25insock, (struct sockaddr *)&ax25src, ax25slen) == -1) {
 			saratoga::scr.error( "[AX25] bind() error");
 			return -1;
 		}
+
+
+		// Prepare out socket
+//		if ((dev = ax25_config_get_dev(ax25port)) == NULL) {
+//			saratoga::scr.error("AX25 could not init outsocket: invalid port name \n");
+//			return 1;
+//		}
+//		if ((ax25outsock = socket(PF_PACKET, SOCK_PACKET, htons(proto))) == -1) {
+//			saratoga::scr.error("AX25 could not init outsocket \n");
+//			return 1;
+//		}
+//		struct sockaddr sa;
+//		socklen_t asize = sizeof(sa);
+//		int s, size;
+//
+//		char buffer[1500];
+//		memset(buffer, 0, sizeof(buffer));
+//
+//		while (1){
+//
+//	if (size = recvfrom(ax25outsock, buffer, sizeof(buffer), 0, &sa,	&asize) != -1){
+//		string ss = buffer;
+//		saratoga::scr.msg(std::to_string(size));
+//		saratoga::scr.msg(ss);
+//	}else
+//		saratoga::scr.msg("fuck");
+//
+//		}
 
 		ax25srcaddress = ax25_ntoa(&ax25src.fsa_ax25.sax25_call);
 		ax25available=true;
@@ -1244,12 +1277,15 @@ int ax25::initax25(){
 
 ax25::ax25(char* destcall)
 {
+
+	this->ax25destcall=destcall;
 	// AX25 Stuff
 	if ((ax25dlen = ax25_aton(ax25destcall, &ax25dest)) == -1) {
 		saratoga::scr.error("[AX25] Unable to convert destination callsign \n" + string(ax25destcall));
 		return ;
 	}
 	ax25::ax25destcall = destcall;
+
 
 	// IP Stuff
 	string addr = "0.0.0.0";
@@ -1307,6 +1343,7 @@ ax25::strport()
 int
 ax25::send()
 {
+	saratoga::scr.msg("[AX25] send() entered.");
 	// static socklen_t	tolen;
 	socklen_t	tolen;
 	ssize_t			nwritten;
@@ -1343,7 +1380,8 @@ ax25::send()
 		if (blen != 0)
 		{
 			//nwritten = sendto(_fd, b, blen, flags, this->saptr(), tolen);
-			nwritten = sendto(ax25::ax25sock, b, blen, flags, (struct sockaddr *)&ax25dest, ax25dlen);
+			saratoga::scr.msg("[AX25] sendto AX25 something!");
+			nwritten = sendto(ax25::ax25insock, b, blen, flags, (struct sockaddr *)&ax25dest, ax25dlen);
 			if (nwritten < 0)
 			{
 				int err = errno;

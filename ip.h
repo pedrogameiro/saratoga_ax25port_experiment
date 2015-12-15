@@ -49,12 +49,17 @@
 #include <ifaddrs.h>
 #include <netdb.h>
 
+#include <netax25/axlib.h>
+#include <netax25/ax25.h>
+#include <netax25/axconfig.h>
+#include <linux/if_ether.h>
+
+
 
 #include "screen.h"
 #include "sarflags.h"
 #include "timestamp.h"
 #include "timer.h"
-
 
 using namespace std;
 using namespace timer_group;
@@ -524,7 +529,7 @@ public:
 	bool set(string addr, int port);
 
 	// Add a buffer to the list to be sent
-	ssize_t tx(char *buf, size_t buflen) {
+	virtual ssize_t tx(char *buf, size_t buflen) {
 		// Add the frame to the end of the list of buffers
 		// alloc the memory for it and then push it
 		saratoga::buffer *tmp = new saratoga::buffer(buf, buflen);
@@ -539,7 +544,7 @@ public:
 
 	// Receive a buffer, return # chars sent - 
 	// You catch the error if <0 
-	ssize_t	rx(char *, sarnet::ip *);
+	virtual ssize_t	rx(char *, sarnet::ip *);
 
 	// Socket #
 	int port();
@@ -548,7 +553,7 @@ public:
 	int	fd() { return(_fd); };
 
 	// Actually transmit the frames in the buffers
-	int send();
+	virtual int send();
 
 	// Are we ready to tx (controls select()
 	bool ready() { return _readytotx; };
@@ -635,6 +640,7 @@ private:
 	static struct full_sockaddr_ax25 ax25src;
 	static char* ax25portcall;
 	static int ax25slen;
+	static char* dev;
 
 
 	struct full_sockaddr_ax25 ax25dest;
@@ -650,6 +656,7 @@ private:
 
 	static constexpr char* ax25port = "spacelink" ;
 	static constexpr char* ax25multidestcall = "ALL";
+	static const int proto = ETH_P_AX25;
 	static const ssize_t		_jumbosize = 8192; // Jumbo ethernet frame size
 	static const ssize_t		_ethsize = 1500; // Normal ethernet frame size
 	static const ssize_t		_udpheader = 8; // Size of the udp header
@@ -668,7 +675,8 @@ private:
 	};
 public:
 
-	static int ax25sock;
+	static int ax25insock;
+	static int ax25outsock;
 	static bool ax25available;
 	static char* ax25srcaddress;
 
@@ -699,7 +707,7 @@ public:
 	bool set(string addr, int port);
 
 	// Add a buffer to the list to be sent
-	ssize_t tx(char *buf, size_t buflen) {
+	virtual ssize_t tx(char *buf, size_t buflen) override {
 		// Add the frame to the end of the list of buffers
 		// alloc the memory for it and then push it
 		saratoga::buffer *tmp = new saratoga::buffer(buf, buflen);
@@ -712,6 +720,8 @@ public:
 		return(buflen);
 	}
 
+
+
 	// Receive a buffer, return # chars sent -
 	// You catch the error if <0
 	ssize_t	rx(char* b, sarnet::ip *from);
@@ -723,7 +733,7 @@ public:
 	int	fd() { return(_fd); };
 
 	// Actually transmit the frames in the buffers
-	int send();
+	virtual int send() override;
 
 	// Are we ready to tx (controls select()
 	bool ready() { return _readytotx; };

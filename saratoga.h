@@ -41,9 +41,7 @@
 #include <string.h>
 #include <list>
 
-#include <netax25/axlib.h>
-#include <netax25/ax25.h>
-#include <netax25/axconfig.h>
+
 
 /* 
  * At this stage we do not support 128 bit descriptors but the code is
