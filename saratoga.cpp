@@ -981,7 +981,7 @@ mainloop:
 			sarnet::ip *from = new sarnet::ip();
 			sz = ax25multiout->rx(buf,from);
 			string	s = from->straddr();
-			saratoga::scr.debug(7, "main(): v4mcastin Read %d bytes from %s",
+			saratoga::scr.debug(7, "main(): ax25castin Read %d bytes from %s",
 				sz, s.c_str());
 			if (saratoga::readhandler(from, buf, sz) && fdchange()){
 				delete from;

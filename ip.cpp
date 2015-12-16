@@ -35,7 +35,7 @@
 #include "ip.h"
 #include "globals.h"
 #include <sys/socket.h>
-
+#include <typeinfo>
 
 using namespace std;
 
@@ -53,13 +53,17 @@ ip::ip(string addr)
 
 	char *addrs = new char[addr.length() + 1];
 	strcpy(addrs, addr.c_str());
-	if (addr.find(":") != std::string::npos)
+	if (addr.find(":") != std::string::npos){
 		_family = AF_INET6;
-	else if (addr.find(".") != std::string::npos)
+		saratoga::scr.debug(7,"ip::ip(string): New ipv6 family ip object, addr="+addr);
+	}
+	else if (addr.find(".") != std::string::npos){
 		_family = AF_INET;
+		saratoga::scr.debug(7,"ip::ip(string): New ipv4 family ip object, addr="+addr);
+	}
 	else
 	{
-		//saratoga::scr.error("ip(%s):Invalid IP Address\n", addrs);
+		saratoga::scr.debug(7,"ip::ip(string): New ax25 family ip object, addr="+addr);
 		_family = AF_AX25;
 		bzero(&_ip, sizeof(union in_storage));
 		//delete addrs;
@@ -823,7 +827,7 @@ udp::send()
 		tolen = sizeof(struct sockaddr_in);
 		break;
 	default:
-		saratoga::scr.error("udp::send(): Bad protocol only AF_INET & AF_INET6 supported\n");
+		saratoga::scr.error("hello udp::send(): Bad protocol only AF_INET & AF_INET6 supported\n");
 		return(-1);
 	}
 
@@ -916,6 +920,7 @@ udp::rx(char *b, sarnet::ip *from)
 string
 udp::straddr()
 {
+	saratoga::scr.debug(7,"udp::straddr()\n");
 	string ret;
 	struct sockaddr_in *in = (struct sockaddr_in *) &_sa;
 	struct sockaddr_in6 *in6 = (struct sockaddr_in6 *) &_sa;
@@ -1021,9 +1026,10 @@ peers::largestfd()
 inline bool
 peers::exists(int fd)
 {
-	for (std::list<udp>::iterator i = _peers.begin(); i != _peers.end(); i++)
+	for (std::list<*udp>::iterator i = _peers.begin(); i != _peers.end(); i++)
 	{
-		udp p = *i;
+		udp u = *i;
+		udp p = *u;
 		if (p.fd() == fd)
 			return true;
 	}
@@ -1054,12 +1060,12 @@ peers::add(sarnet::udp *p)
 		saratoga::scr.error("peers::add cannot add fd <= 2, fd=%d", p->fd());
 		return(nullptr);
 	}
-	for (std::list<udp>::iterator i = _peers.begin(); i != _peers.end(); i++)
+	for (std::list<udp*>::iterator i = _peers.begin(); i != _peers.end(); i++)
 	{
-		if (i->fd() == p->fd())
+		if ((*i)->fd() == p->fd())
 		{
 			saratoga::scr.error("peers::add fd=%d already added to files", p->fd());
-			return(&(*i));
+			return(i);
 		}
 	}
 	saratoga::scr.msg("Added new Peer %s port %d fd=%d", s.c_str(), p->port(), p->fd());
@@ -1074,13 +1080,13 @@ peers::add(sarnet::ip *address, int port)
 	sarnet::udp	*newsock;
 	string sa = address->straddr();
 
-	for (std::list<udp>::iterator i = _peers.begin(); i != _peers.end(); i++)
+	for (std::list<udp*>::iterator i = _peers.begin(); i != _peers.end(); i++)
 	{
-		if (i->straddr() == sa && i->port() == port)
+		if ((*i)->straddr() == sa && (*i)->port() == port)
 		{
 			saratoga::scr.msg("peers::add socket already exists to %s port %d",
 				sa.c_str(), port);
-			return(&(*i));
+			return(i);
 		}
 	}
 	// AX25
@@ -1088,6 +1094,7 @@ peers::add(sarnet::ip *address, int port)
 		char *cstr = new char[address->addrax25().length() + 1];
 		strcpy(cstr, address->addrax25().c_str());
 		newsock = new sarnet::ax25(cstr);
+		saratoga::scr.debug(7,"created new AX25 peer %s",newsock->straddr());
 	}else
 		newsock = new sarnet::udp(address, port);
 
@@ -1111,7 +1118,7 @@ peers::add(string addr, int port)
 {
 	sarnet::udp	*newsock;
 
-	for (std::list<udp>::iterator i = _peers.begin(); i != _peers.end(); i++)
+	for (std::list<udp* >::iterator i = _peers.begin(); i != _peers.end(); i++)
 	{
 		if (i->straddr() == addr && i->port() == port)
 		{
@@ -1124,15 +1131,17 @@ peers::add(string addr, int port)
 	if((new ip(addr))->family() == AF_AX25){
 		char *cstr = new char[addr.length() + 1];
 		strcpy(cstr, addr.c_str());
+		saratoga::scr.debug(7, "peers::add(string,int) created AX25 sock.");
 		newsock = new sarnet::ax25(cstr);
 	}else
-		newsock = new sarnet::udp(addr, port);	if (newsock->fd() <= 2)
-	{
+		newsock = new sarnet::udp(addr, port);
+
+	if (newsock->fd() <= 2){
 		saratoga::scr.error("peers::add cannot add peer with fd <= 2, fd=%d", newsock->fd());
 		delete newsock;
 		return(nullptr);
 	}
-	saratoga::scr.msg("Added new Peer %s port %d fd=", addr.c_str(), port, newsock->fd());
+	saratoga::scr.msg("Added new Peer %s port %d fd=%d", addr.c_str(), port, newsock->fd());
 	_fdchange = true; // We have definately changed # peers for select()
 	_peers.push_back(*newsock);
 	return(newsock);
@@ -1183,8 +1192,13 @@ sarnet::udp *
 peers::match(sarnet::ip *host)
 {
 	string haddr = host->straddr();
-	for (std::list<udp>::iterator i = _peers.begin(); i != _peers.end(); i++)
+	for (std::list<udp*>::iterator i = _peers.begin(); i != _peers.end(); i++)
 	{
+		//ax25* s = i.pointer;
+		//string c = typeid(s).name();
+		//saratoga::scr.error(c);
+		//ax25 s = i;
+		//saratoga::scr.error(s.straddr());
 		sarnet::ip	ai(i->straddr());
 		if (*host == ai)
 			return(&(*i));
@@ -1282,30 +1296,25 @@ int ax25::initax25(){
 ax25::ax25(char* destcall)
 {
 
-	this->ax25destcall=destcall;
+	ax25addr=(string)destcall;
+	ax25::ax25destcall = destcall;
+
+
 	// AX25 Stuff
 	if ((ax25dlen = ax25_aton(ax25destcall, &ax25dest)) == -1) {
 		saratoga::scr.error("[AX25] Unable to convert destination callsign \n" + string(ax25destcall));
 		return ;
 	}
-	ax25::ax25destcall = destcall;
 
 
 	// IP Stuff
-	string addr = "0.0.0.0";
 	int port= sarport;
 
 	const int	on = 1;
 	struct sockaddr_in *in = (sockaddr_in *) &_sa;
-	struct protoent	*proto;
 
-	ip	ipa(addr);
-	proto = getprotobyname("UDP");
+
 	_readytotx = false;
-	_delay = new timer_group::timer(addr, c_timer.framedelay());
-	memcpy(&in->sin_addr, ipa.addr4(), sizeof(struct in_addr));
-	in->sin_family = AF_INET;
-	in->sin_port = htons(port);
 
 	_readytotx = false;
 	_bufax25.empty(); // No buffers either
@@ -1319,20 +1328,15 @@ ax25::ax25()
 {
 
 	// IP Stuff
-	string addr = "0.0.0.0";
 	int port= sarport;
 
 	const int	on = 1;
 	struct sockaddr_in *in = (sockaddr_in *) &_sa;
 	struct protoent	*proto;
 
-	ip	ipa(addr);
-	proto = getprotobyname("UDP");
+
 	_readytotx = false;
-	_delay = new timer_group::timer(addr, c_timer.framedelay());
-	memcpy(&in->sin_addr, ipa.addr4(), sizeof(struct in_addr));
-	in->sin_family = AF_INET;
-	in->sin_port = htons(port);
+
 
 	_readytotx = false;
 	_bufax25.empty(); // No buffers either
@@ -1377,7 +1381,7 @@ ax25::strport()
 int
 ax25::send()
 {
-	saratoga::scr.msg("send() entry");
+	saratoga::scr.msg("ax25::send() entered.");
 	// static socklen_t	tolen;
 	socklen_t	tolen;
 	ssize_t			nwritten;
@@ -1385,18 +1389,7 @@ ax25::send()
 	size_t	bcount = 0;	// # bytes written
 	string adr = this->straddr();
 
-	switch(this->family())
-	{
-	case AF_INET6:
-		tolen = sizeof(struct sockaddr_in6);
-		break;
-	case AF_INET:
-		tolen = sizeof(struct sockaddr_in);
-		break;
-	default:
-		saratoga::scr.error("udp::send(): Bad protocol only AF_INET & AF_INET6 supported\n");
-		return(-1);
-	}
+
 
 	// We only send frames when our delay has timed out
 	// Yes we will send all of the frames in our buffersa
@@ -1419,7 +1412,7 @@ ax25::send()
 			if (nwritten < 0)
 			{
 				int err = errno;
-				saratoga::scr.perror(err, "udp::send(%d): Cannot write %d bytes to %s Port %d\n",
+				saratoga::scr.perror(err, "ax25::send(%d): Cannot write %d bytes to %s Port %d\n",
 					this->fd(),
 					blen,
 					adr.c_str(),
@@ -1427,7 +1420,7 @@ ax25::send()
 			}
 			else
 			{
-				saratoga::scr.debug(4, "udp::send(%d): Wrote %d bytes to %s Port %d",
+				saratoga::scr.debug(4, "ax25::send(%d): Wrote %d bytes to %s Port %d",
 					this->fd(),
 					nwritten,
 					adr.c_str(),
@@ -1452,6 +1445,7 @@ ax25::rx(char *b, sarnet::ip *from)
 	socklen_t asize = sizeof(sa);
 	int nread;
 
+	saratoga::scr.msg("AX25 Checking Received beacon");
 
 	if ((nread = recvfrom(ax25insock, b, sizeof(b), 0, &sa, &asize)) == -1) {
 		saratoga::scr.error("Could not read from ax25insock!");
@@ -1459,12 +1453,12 @@ ax25::rx(char *b, sarnet::ip *from)
 	}
 
 	string addr = sa.sa_data;
-	saratoga::scr.msg("Received beacon from "+addr);
+	saratoga::scr.msg("AX25 Received beacon from "+addr);
 
+	sarnet::ip retaddr(addr);
+	*from = retaddr;
 
-
-	from = new sarnet::ip(addr);
-	saratoga::scr.debug(7, "udp::rx(): Received %d bytes from %s", nread, addr);
+	saratoga::scr.debug(7, "ax25::rx(): Received %d bytes from "+addr, nread);
 	if (nread < 0)
 	{
 		int err = errno;
@@ -1475,36 +1469,7 @@ ax25::rx(char *b, sarnet::ip *from)
 
 }
 
-// Return string of the IP address
-string
-ax25::straddr()
-{
-	string ret;
-	struct sockaddr_in *in = (struct sockaddr_in *) &_sa;
-	struct sockaddr_in6 *in6 = (struct sockaddr_in6 *) &_sa;
-	char *s;
 
-	switch(this->family())
-	{
-	case AF_INET:
-		s = new char [INET_ADDRSTRLEN];
-		// s = (char *) malloc(INET_ADDRSTRLEN);
-		inet_ntop(this->family(), &in->sin_addr, s, INET_ADDRSTRLEN);
-		ret = s;
-		free(s);
-		return(ret);
-	case AF_INET6:
-		s = new char [INET6_ADDRSTRLEN];
-		// s = (char *) malloc(INET6_ADDRSTRLEN);
-		inet_ntop(this->family(), &in6->sin6_addr, s, INET6_ADDRSTRLEN);
-		ret = s;
-		free(s);
-		return(ret);
-	default:
-		saratoga::scr.error("udp::straddr() Invalid IP family\n");
-		return("OTHER");
-	}
-}
 
 bool
 ax25::setopt(int option, void *optval, socklen_t optsize) {
@@ -1535,26 +1500,20 @@ string
 ax25::print()
 {
 
-	string ret = "UDP:AX25";
+	string ret = "UDP:AX25 AF_AX25 ";
 
 	char	tmp[128];
 
-	switch(this->family())
-	{
-	case AF_INET:
-		ret += "AF_INET ";
-		break;
-	case AF_INET6:
-		ret += "AF_INET6 ";
-		break;
-	default:
-		ret += "OTHER";
-		break;
-	}
+
 	ret += this->straddr();
 	sprintf(tmp, " PORT=%" PRIu16 " FD=%d", this->port(), this->_fd);
 	ret += tmp;
 	return(ret);
+}
+
+string ax25::straddr(){
+	saratoga::scr.debug(7,"ax25::straddr()");
+	return ax25addr;
 }
 
 

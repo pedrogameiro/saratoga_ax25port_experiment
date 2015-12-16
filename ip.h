@@ -321,7 +321,7 @@ public:
 
 
 	virtual string	straddr();
-	string	print();
+	virtual string	print();
 };
 
 /*
@@ -578,7 +578,7 @@ public:
 	int port();
 
 	// fd
-	int	fd() { return(_fd); };
+	virtual int	fd() { return(_fd); };
 
 	// Actually transmit the frames in the buffers
 	virtual int send();
@@ -588,7 +588,7 @@ public:
 	bool ready(bool x) { _readytotx = x; return _readytotx; };
 
 	// Printable IP Address
-	string straddr();
+	virtual string straddr();
 
 	// Printable Port Number
 	string strport();
@@ -608,7 +608,7 @@ public:
 
 	struct sockaddr *saptr() { return (struct sockaddr *) &_sa; };
 
-	string print();
+	virtual string print();
 };
 
 // List of currently opened udp peers
@@ -616,7 +616,7 @@ class peers
 {
 private:
 	const size_t	_max = 100; // Maximum # of sockets
-	std::list<udp>	_peers; // List of open peers
+	std::list<*udp>	_peers; // List of open peers
 	bool		_fdchange; // We have added/removed a peer used for select()
 public:
 	peers() { };
@@ -676,6 +676,7 @@ private:
 
 
 	char* ax25destcall;
+	string ax25addr;
 	int ax25dlen;
 
 	struct sockaddr_storage	_sa; // sockaddr info and it is big enough to hold v4 & v6 info
@@ -764,7 +765,7 @@ public:
 	int port();
 
 	// fd
-	int	fd() { return(ax25insock); };
+	virtual int	fd() { return(ax25insock); };
 
 	// Actually transmit the frames in the buffers
 	virtual int send() override;
@@ -774,7 +775,7 @@ public:
 	bool ready(bool x) { _readytotx = x; return _readytotx; };
 
 	// Printable IP Address
-	string straddr();
+	virtual string straddr() override;
 
 	// Printable Port Number
 	string strport();
