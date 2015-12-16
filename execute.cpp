@@ -108,10 +108,10 @@ cli_beacon::execute()
 	sardir::fsinfo *fs = new sardir::fsinfo(".");
 
 	// AX25
-	if(sarnet::ax25::ax25available){
+	if(sarnet::udp::ax25available){
 		scr.msgout("Trying to queue AX25 beacon");
 		// We always want the AX25 Address in the eid
-		eidstr = std::string(sarnet::ax25::ax25srcaddress);
+		eidstr = std::string(sarnet::udp::ax25srcaddress);
 		eidstr += " ";
 		eidstr += c_eid.eid();
 		// Do we wish to advertise free space
@@ -138,7 +138,7 @@ cli_beacon::execute()
 		}
 
 
-		if (f->tx((sarnet::udp*)ax25multiout) < 0)
+		if (f->tx(ax25multiout) < 0)
 		 	scr.error("Cant queue a multicast AX25 beacon");
 		else
 			scr.msgout("cli_beacon::execute() AX25 Multicast Beacon in buffer EID %s", eidstr.c_str());

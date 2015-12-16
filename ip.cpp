@@ -329,6 +329,9 @@ udp::udp(string addr, int port)
 
 	switch(ipa.family())
 	{
+	case AF_AX25:
+		constructax25(addr);
+		return;
 	case AF_INET:
 		_fd = socket(AF_INET, SOCK_DGRAM, proto->p_proto);
 		if (_fd == -1)
@@ -392,6 +395,9 @@ udp::udp(sarnet::ip *addr, int port)
 
 	switch(addr->family())
 	{
+	case AF_AX25:
+		constructax25(addr->addrax25());
+		return;
 	case AF_INET:
 		_fd = socket(AF_INET, SOCK_DGRAM, proto->p_proto);
 		if (_fd == -1)
@@ -457,6 +463,9 @@ udp::udp(struct sockaddr_storage *p)
 	case AF_INET6:
 		memcpy(&_sa, p, sizeof (struct sockaddr_in6));
 		break;
+	case AF_AX25:
+		saratoga::scr.error("udp::udp tried to udp::udp sockaddr_storage with AF_AX25 family.");
+		return;
 	default:
 		saratoga::scr.error("udp::udp Invalid Frame Type for udp");
 		return;
@@ -488,6 +497,12 @@ udp::udp(enum mcast_dir dir, udp *p, string addr, int port)
 
 	_readytotx = false;
 	_delay = new timer_group::timer(addr, c_timer.framedelay());
+
+	if (ipa.family() == AF_AX25){
+		saratoga::scr.error("udp::udp: I'm not implemented for AX25!!");
+		return;
+	}
+
 
 	// IPv4 Multicast Socket
 	if (ipa.family() == AF_INET)
@@ -704,6 +719,9 @@ udp::udp(int protocol, int port)
 	bzero(&_sa, sizeof(struct sockaddr_storage));
 	switch(protocol)
 	{
+	case AF_AX25:
+		saratoga::scr.error("udp::udp: I'm not implemented for AX25!!");
+		return;
 	case AF_INET:
 		_fd = socket(AF_INET, SOCK_DGRAM, proto->p_proto);
 		in->sin_family = AF_INET;
@@ -791,6 +809,9 @@ udp::port()
 		return(ntohs(in->sin_port));
 	case AF_INET6:
 		return(ntohs(in6->sin6_port));
+	case AF_AX25:
+		saratoga::scr.debug(7,"udp::port(): Returning dummy port (0) for ax25 port.");
+		return(0);
 	default:
 		return(0);
 	}
@@ -799,6 +820,9 @@ udp::port()
 string
 udp::strport()
 {
+	if(this->family() == AF_AX25)
+		return "0";
+
 	string s;
 	char	cstr[16];
 
@@ -807,10 +831,17 @@ udp::strport()
 	return(s);
 }
 
+
+
 // Actually send buffers to a udp socket
 int
 udp::send()
 {
+	saratoga::scr.debug(7,"udp::rx: Doing a AX25 detour.");
+	if (this->family() == AF_AX25)
+		return ax25send();
+
+
 	// static socklen_t	tolen;
 	socklen_t	tolen;
 	ssize_t			nwritten;
@@ -878,6 +909,11 @@ udp::send()
 ssize_t
 udp::rx(char *b, sarnet::ip *from)
 {
+	saratoga::scr.debug(7,"udp::rx: Doing a AX25 detour.");
+	if (this->family() == AF_AX25)
+		return ax25rx(b,from);
+
+
 	string			s;
 
 	struct sockaddr_storage	addrbuf;
@@ -920,6 +956,10 @@ udp::rx(char *b, sarnet::ip *from)
 string
 udp::straddr()
 {
+	if(this->family() == AF_AX25)
+		return (string)ax25destcall;
+
+
 	saratoga::scr.debug(7,"udp::straddr()\n");
 	string ret;
 	struct sockaddr_in *in = (struct sockaddr_in *) &_sa;
@@ -986,6 +1026,9 @@ udp::print()
 		break;
 	case AF_INET6:
 		ret += "AF_INET6 ";
+		break;
+	case AF_AX25:
+		ret += "AF_AX25 ";
 		break;
 	default:
 		ret += "OTHER";
@@ -1092,7 +1135,7 @@ peers::add(sarnet::ip *address, int port)
 	if(address->family() == AF_AX25){
 		char *cstr = new char[address->addrax25().length() + 1];
 		strcpy(cstr, address->addrax25().c_str());
-		newsock = new sarnet::ax25(cstr);
+		newsock = new sarnet::udp(cstr);
 		saratoga::scr.debug(7,"created new AX25 peer %s",newsock->straddr());
 	}else
 		newsock = new sarnet::udp(address, port);
@@ -1131,7 +1174,7 @@ peers::add(string addr, int port)
 		char *cstr = new char[addr.length() + 1];
 		strcpy(cstr, addr.c_str());
 		saratoga::scr.debug(7, "peers::add(string,int) created AX25 sock.");
-		newsock = new sarnet::ax25(cstr);
+		newsock = new sarnet::udp(cstr);
 	}else
 		newsock = new sarnet::udp(addr, port);
 
@@ -1225,19 +1268,19 @@ peers::match(string addr)
  *************************************/
 
 
-int ax25::ax25outsock;
-char* ax25::ax25srcaddress;
-struct full_sockaddr_ax25 ax25::ax25src;
-bool ax25::ax25available = false;
-char* ax25::ax25portcall;
-int ax25::ax25slen;
-int ax25::ax25insock;
-char* ax25::dev;
+int udp::ax25outsock;
+char* udp::ax25srcaddress;
+struct full_sockaddr_ax25 udp::ax25src;
+bool udp::ax25available = false;
+char* udp::ax25portcall;
+int udp::ax25slen;
+int udp::ax25insock;
+char* udp::dev;
 
 
 
 
-int ax25::initax25(){
+int udp::initax25(){
 	// AX25
 	if (ax25_config_load_ports() == 0) {
 		saratoga::scr.error("[AX25] No AX.25 ports defined\n");
@@ -1269,19 +1312,19 @@ int ax25::initax25(){
 
 
 		// Prepare in socket
-		if ((dev = ax25_config_get_dev(ax25port)) == NULL) {
+		if ((dev = ax25_config_get_dev((char*)ax25port)) == NULL) {
 			saratoga::scr.error("AX25 could not init outsocket: invalid port name \n");
 			return 1;
 		}
-		if ((ax25insock = socket(PF_PACKET, SOCK_PACKET, htons(proto))) == -1) {
+		if ((ax25insock = socket(PF_PACKET, SOCK_PACKET, htons(ETH_P_AX25))) == -1) {
 			saratoga::scr.error("AX25 could not init outsocket \n"+to_string(ax25insock));
 			return 1;
 		}
 
 
 		ax25available=true;
-		saratoga::ax25multiout = new sarnet::ax25(ax25::ax25multidestcall);
-		saratoga::ax25multiin = new sarnet::ax25();
+		saratoga::ax25multiout = new sarnet::udp(udp::ax25multidestcall);
+		saratoga::ax25multiin = new sarnet::udp(true);
 		saratoga::scr.msg("[AX25] AX.25 started with success.\n");
 
 
@@ -1290,13 +1333,10 @@ int ax25::initax25(){
 	return 0;
 }
 
-
-// For out socket.
-ax25::ax25(char* destcall)
-{
+void udp::constructax25(char* destcall){
 
 	ax25addr=(string)destcall;
-	ax25::ax25destcall = destcall;
+	ax25destcall = destcall;
 
 
 	// AX25 Stuff
@@ -1313,74 +1353,40 @@ ax25::ax25(char* destcall)
 	struct sockaddr_in *in = (sockaddr_in *) &_sa;
 
 
+	_isax25 = true;
 	_readytotx = false;
-
-	_readytotx = false;
-	_bufax25.empty(); // No buffers either
+	_buf.empty(); // No buffers either
 	_delay = new timer_group::timer(0); // No timer
 	_fd=ax25outsock;
-
 }
 
 // For in socket
-ax25::ax25()
+udp::udp(bool imanidiot )
 {
 
-	// IP Stuff
-	int port= sarport;
+       // IP Stuff
+       int port= sarport;
 
-	const int	on = 1;
-	struct sockaddr_in *in = (sockaddr_in *) &_sa;
-	struct protoent	*proto;
-
-
-	_readytotx = false;
+      const int       on = 1;
+       struct sockaddr_in *in = (sockaddr_in *) &_sa;
+       struct protoent *proto;
 
 
-	_readytotx = false;
-	_bufax25.empty(); // No buffers either
-	_delay = new timer_group::timer(0); // No timer
-	_fd=ax25insock;
+       _readytotx = false;
+
+
+       _readytotx = false;
+       _buf.empty(); // No buffers either
+       _delay = new timer_group::timer(0); // No timer
+       _fd=ax25insock;
 
 }
 
 
-// Should we do a htons here CHECK IT!
-int
-ax25::port()
-{
-	struct sockaddr_in *in = (sockaddr_in *) &_sa;
-	struct sockaddr_in6 *in6 = (sockaddr_in6 *) &_sa;
 
-	switch(this->family())
-	{
-	case AF_INET:
-		return(ntohs(in->sin_port));
-	case AF_INET6:
-		return(ntohs(in6->sin6_port));
-	case AF_AX25:
-		return 0;
-	default:
-		return(0);
-	}
-}
+int udp::ax25send(){
 
-string
-ax25::strport()
-{
-	string s;
-	char	cstr[16];
-
-	sprintf(cstr, "%d", this->port());
-	s += cstr;
-	return(s);
-}
-
-// Actually send buffers to a udp socket
-int
-ax25::send()
-{
-	saratoga::scr.msg("ax25::send() entered.");
+	saratoga::scr.debug(7,"udp::ax25send() entered.");
 	// static socklen_t	tolen;
 	socklen_t	tolen;
 	ssize_t			nwritten;
@@ -1398,16 +1404,16 @@ ax25::send()
 		return(0);
 	_delay->reset();
 	// Send the buffers & flush the buffers
-	while (! _bufax25.empty())
+	while (! _buf.empty())
 	{
-		saratoga::buffer *tmp = &(_bufax25.front());
+		saratoga::buffer *tmp = &(_buf.front());
 		char	*b = tmp->buf();
 		ssize_t	blen = tmp->len();
 		if (blen != 0)
 		{
 			//nwritten = sendto(_fd, b, blen, flags, this->saptr(), tolen);
-			saratoga::scr.msg("[AX25] sendto AX25 something!");
-			nwritten = sendto(ax25::ax25outsock, b, blen, flags, (struct sockaddr *)&ax25dest, ax25dlen);
+			saratoga::scr.debug(7,"[AX25] sendto AX25 something!");
+			nwritten = sendto(udp::ax25outsock, b, blen, flags, (struct sockaddr *)&ax25dest, ax25dlen);
 			if (nwritten < 0)
 			{
 				int err = errno;
@@ -1429,17 +1435,24 @@ ax25::send()
 		}
 		// Pop it whether we sent it correctoy or not so we don't get
 		// into a race condition
-		_bufax25.pop_front();
+		_buf.pop_front();
 		// Send back total bytes written
 	}
 	_readytotx = false;
 	return(bcount);
 }
 
-ssize_t
-ax25::rx(char *b, sarnet::ip *from)
-{
 
+// For out socket.
+udp::udp(char* destcall){
+	constructax25(destcall);
+}
+
+
+
+
+ssize_t udp::ax25rx(char *b, sarnet::ip *from)
+{
 	struct sockaddr sa;
 	socklen_t asize = sizeof(sa);
 	int nread;
@@ -1466,53 +1479,6 @@ ax25::rx(char *b, sarnet::ip *from)
 
 	return(nread);
 
-}
-
-
-
-bool
-ax25::setopt(int option, void *optval, socklen_t optsize) {
-
-	if (setsockopt(_fd, SOL_SOCKET, option, optval, optsize) < 0)
-	{
-		saratoga::scr.perror(errno, "Can't setsockopt %d for socket %d\n",
-			option, _fd);
-		return(0);
-	}
-	return(1);
-};
-
-// Is the option set OK ?
-bool
-ax25::getopt(int option, void *optval, socklen_t *optlen) {
-
-	if (getsockopt(_fd, SOL_SOCKET, option, optval, optlen) < 0)
-	{
-		saratoga::scr.perror(errno, "Can't getsockopt %d for socket %d\n",
-			option, _fd);
-		return(0);
-	}
-	return(1);
-};
-
-string
-ax25::print()
-{
-
-	string ret = "UDP:AX25 AF_AX25 ";
-
-	char	tmp[128];
-
-
-	ret += this->straddr();
-	sprintf(tmp, " PORT=%" PRIu16 " FD=%d", this->port(), this->_fd);
-	ret += tmp;
-	return(ret);
-}
-
-string ax25::straddr(){
-	saratoga::scr.debug(7,"ax25::straddr()");
-	return ax25addr;
 }
 
 

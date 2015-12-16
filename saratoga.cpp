@@ -383,7 +383,7 @@ initialise(string logname, string confname)
 		sleep(3);
 	}
 
-	sarnet::ax25::initax25();
+	sarnet::udp::initax25();
 
 	// IPv4 listening input socket
 	v4in = new sarnet::udp(AF_INET, sarport);
@@ -622,7 +622,7 @@ mainloop:
 		v6mcastin->ready(true);
 
 		// AX25
-		if(sarnet::ax25::ax25available){
+		if(sarnet::udp::ax25available){
 			FD_SET(ax25multiin->fd(), &crfd);
 			ax25multiin->ready(true);
 			(ax25multiout->ready()) ? FD_SET(ax25multiout->fd(), &cwfd) : FD_CLR(ax25multiout->fd(), &cwfd);
@@ -976,7 +976,7 @@ mainloop:
 		}
 		// Handle AX25 Input Multicast frames
 		//if (FD_ISSET(v4mcastin->fd(), &crfd))
-		if(sarnet::ax25::ax25available && FD_ISSET(ax25multiout->fd(), &crfd))
+		if(sarnet::udp::ax25available && FD_ISSET(ax25multiout->fd(), &crfd))
 		{
 			sarnet::ip *from = new sarnet::ip();
 			sz = ax25multiout->rx(buf,from);
@@ -1024,7 +1024,7 @@ mainloop:
 		if (c_multicast.state() == true)
 		{
 			// Send AX25 Multicast stuff.
-			if (sarnet::ax25::ax25available && FD_ISSET(ax25multiout->fd(), &cwfd)){
+			if (sarnet::udp::ax25available && FD_ISSET(ax25multiout->fd(), &cwfd)){
 
 				if ((sz = ax25multiout->send()) > 0)
 					saratoga::scr.debug(7, "main(): ax25multiout Wrote %d bytes", sz);

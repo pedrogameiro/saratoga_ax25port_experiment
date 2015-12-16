@@ -453,6 +453,41 @@ public:
 class udp
 {
 private:
+	//AX25
+
+	static struct full_sockaddr_ax25 ax25src;
+	struct full_sockaddr_ax25 ax25dest;
+
+	static char* ax25portcall;
+	static int ax25slen;
+	static char* dev;
+
+
+	char* ax25destcall;
+	string ax25addr;
+	int ax25dlen;
+
+	static constexpr char* ax25port = "spacelink" ;
+	static constexpr char* ax25multidestcall = "ALL";
+
+	void constructax25(char* destcall);
+
+	void constructax25(string destcall){
+		char *cstr = new char[destcall.length() + 1];
+		strcpy(cstr, destcall.c_str());
+		this->constructax25(cstr);
+	}
+
+	int ax25send();
+	ssize_t ax25rx(char* b,sarnet::ip *from);
+
+
+
+	bool _isax25=false;
+
+	//END
+
+
 	struct sockaddr_storage	_sa; // sockaddr info and it is big enough to hold v4 & v6 info
 	int	_fd; // file descriptor
 	std::list<saratoga::buffer>	_buf; // Frames queued to send
@@ -464,6 +499,7 @@ private:
 	static const ssize_t		_udpheader = 8; // Size of the udp header
 	static const ssize_t		_v4header = 20; // Max Size of an ipv4 header
 	static const ssize_t		_v6header = 40; // Size of an ipv6 header
+	static const ssize_t 		_ax25size = 255;
 	const ssize_t				_maxbuff = _ethsize;
 
 	// We will ALWAYS send or recv a minumum of 4 bytes as this is the size of
@@ -479,11 +515,28 @@ private:
 	}; 
 public:
 
+	//AX25
+
+	static int ax25outsock;
+	static int ax25insock;
+	static bool ax25available;
+	static char* ax25srcaddress;
+
+	static int initax25();
+
+	udp(char* dest);
+	udp(bool imanidiot);
+
+
+
+	//END
+
 	udp() { _fd = -1; 
 		_buf.empty(); 
 		bzero(&_sa, sizeof (struct sockaddr_storage)); 
 		_readytotx = false;
 		_delay = new timer_group::timer(); };
+
 
 	// Create a socket to a particular address and port
 	udp(string addr, int port);
@@ -544,6 +597,9 @@ public:
 
 	// What are we v4 or v6
 	int family() { 
+		if(_isax25)
+			return AF_AX25;
+
 		struct sockaddr *s = (struct sockaddr *) &_sa;
 		return(s->sa_family); 
 	};
@@ -656,145 +712,6 @@ public:
 
 
 	// Print all the open sockets info
-	string print();
-};
-
-
-
-class ax25 : public udp
-{
-private:
-
-	//AX25lib
-	// AX25
-	static struct full_sockaddr_ax25 ax25src;
-	struct full_sockaddr_ax25 ax25dest;
-
-	static char* ax25portcall;
-	static int ax25slen;
-	static char* dev;
-
-
-	char* ax25destcall;
-	string ax25addr;
-	int ax25dlen;
-
-	struct sockaddr_storage	_sa; // sockaddr info and it is big enough to hold v4 & v6 info
-	int _fd ; // file descriptor
-
-
-	std::list<saratoga::buffer>	_bufax25; // Frames queued to send
-	bool	_readytotx;	// Sets FD_SET() or FD_CLR() for tx
-	timer_group::timer	*_delay;	// Used to implement a delay between sending frames
-
-	static constexpr char* ax25port = "spacelink" ;
-	static constexpr char* ax25multidestcall = "ALL";
-	static const int proto = ETH_P_AX25;
-	static const ssize_t		_jumbosize = 8192; // Jumbo ethernet frame size
-	static const ssize_t		_ethsize = 1500; // Normal ethernet frame size
-	static const ssize_t		_udpheader = 8; // Size of the udp header
-	static const ssize_t		_v4header = 20; // Max Size of an ipv4 header
-	static const ssize_t		_v6header = 40; // Size of an ipv6 header
-	static const ssize_t 		_ax25size = 255;
-	const ssize_t				_maxbuff = _ax25size;
-
-	// We will ALWAYS send or recv a minumum of 4 bytes as this is the size of
-	// the saratoga flags header so set the watermarks to this
-	const int		_rcvlowat = 4;
-	const int		_sndlowat = 4;
-
-	ssize_t _maxframesize() {
-			return (_maxbuff - _v4header - _udpheader);
-	};
-public:
-
-	static int ax25outsock;
-	static int ax25insock;
-	static bool ax25available;
-	static char* ax25srcaddress;
-
-
-	static int initax25();
-	ax25(char* dest);
-	ax25();
-
-
-	~ax25() { this->zap(); };
-
-	void zap() {
-		// Clear the buffers
-		_bufax25.clear();
-	}
-
-	ssize_t	framesize() { return _maxframesize(); };
-
-	// What are we v4 or v6
-	int family() {
-		return AF_AX25;
-	};
-
-	// Handle integer setsockopt
-	bool setopt(int option, void *optval, socklen_t optsize);
-
-	// Is the option set OK ?
-	bool getopt(int option, void *optval, socklen_t *optlen);
-
-	bool set(string addr, int port);
-
-	// Add a buffer to the list to be sent
-	virtual ssize_t tx(char *buf, size_t buflen) override {
-		// Add the frame to the end of the list of buffers
-		// alloc the memory for it and then push it
-		saratoga::buffer *tmp = new saratoga::buffer(buf, buflen);
-		_bufax25.push_back(*tmp);
-
-		// make FD_SET ready() test to true
-		// that way we can call send() when ready
-		_readytotx = true;
-		// delete tmp;
-		return(buflen);
-	}
-
-
-
-	// Receive a buffer, return # chars sent -
-	// You catch the error if <0
-	virtual ssize_t	rx(char* b, sarnet::ip *from) override ;
-
-	// Socket #
-	int port();
-
-	// fd
-	virtual int	fd() { return(ax25insock); };
-
-	// Actually transmit the frames in the buffers
-	virtual int send() override;
-
-	// Are we ready to tx (controls select()
-	bool ready() { return _readytotx; };
-	bool ready(bool x) { _readytotx = x; return _readytotx; };
-
-	// Printable IP Address
-	virtual string straddr() override;
-
-	// Printable Port Number
-	string strport();
-
-	struct in_addr *addr4() {
-		struct sockaddr_in *p = (struct sockaddr_in *) &_sa;
-		return(&p->sin_addr);
-	}
-
-	struct in6_addr *addr6()
-	{
-		struct sockaddr_in6 *p = (struct sockaddr_in6 *) &_sa;
-		return(&p->sin6_addr);
-	}
-
-	struct sockaddr_storage *addr() { return &_sa; };
-
-	struct sockaddr *saptr() { return (struct sockaddr *) &_sa; };
-
 	string print();
 };
 
