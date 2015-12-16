@@ -509,6 +509,8 @@ private:
 	ssize_t _maxframesize() {
 		if (this->family() == AF_INET)
 			return (_maxbuff - _v4header - _udpheader);
+		else if (this->family() == AF_AX25)
+			return _maxbuff;
 		else
 			return (_maxbuff - _v6header - _udpheader);
 	}; 
