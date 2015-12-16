@@ -456,19 +456,18 @@ private:
 	//AX25
 
 	static struct full_sockaddr_ax25 ax25src;
-	struct full_sockaddr_ax25 ax25dest;
-
 	static char* ax25portcall;
 	static int ax25slen;
 	static char* dev;
 
+	static constexpr char* ax25port = "spacelink" ;
+	static constexpr char* ax25multidestcall = "ALL";
 
+	struct full_sockaddr_ax25 ax25dest;
 	char* ax25destcall;
 	string ax25addr;
 	int ax25dlen;
 
-	static constexpr char* ax25port = "spacelink" ;
-	static constexpr char* ax25multidestcall = "ALL";
 
 	void constructax25(char* destcall);
 
@@ -500,7 +499,7 @@ private:
 	static const ssize_t		_v4header = 20; // Max Size of an ipv4 header
 	static const ssize_t		_v6header = 40; // Size of an ipv6 header
 	static const ssize_t 		_ax25size = 255;
-	const ssize_t				_maxbuff = _ethsize;
+	ssize_t				_maxbuff = _ethsize;
 
 	// We will ALWAYS send or recv a minumum of 4 bytes as this is the size of
 	// the saratoga flags header so set the watermarks to this
@@ -571,6 +570,12 @@ public:
 		_fd = b->fd();
 		_readytotx = b->_readytotx;
 		_buf = b->_buf;
+		_isax25 = b->_isax25;
+		ax25destcall = b->ax25destcall;
+		ax25addr = b->ax25addr;
+		ax25dlen = b->ax25dlen;
+		ax25dest = b->ax25dest;
+
 		bzero(&_sa, sizeof(struct sockaddr_storage));
 		bcopy(&_sa, b->addr(), sizeof(struct sockaddr_storage));
 	}
@@ -579,6 +584,14 @@ public:
 	udp&	operator=(udp& s1) {
 		_fd = s1.fd();
 		_readytotx = s1.ready();
+
+		_isax25 = s1._isax25;
+		ax25destcall = s1.ax25destcall;
+		ax25addr = s1.ax25addr;
+		ax25dlen = s1.ax25dlen;
+		ax25dest = s1.ax25dest;
+
+
 		bzero(&_sa, sizeof(struct sockaddr_storage));
 		bcopy(&_sa, s1.addr(), sizeof(struct sockaddr_storage));
 		return(*this);
@@ -586,11 +599,16 @@ public:
 
 	bool	operator==(const udp &s)
 	{
-		return ((_fd == s._fd) &&
-			(_readytotx == s._readytotx) &&
-//			(_buf == s._buf) &&
-			(memcmp(&_sa, &s._sa, 
-				sizeof(struct sockaddr_storage)) == 0));
+
+
+		if(!_isax25){
+			return ((_fd == s._fd) &&
+				(_readytotx == s._readytotx) &&
+	//			(_buf == s._buf) &&
+				(memcmp(&_sa, &s._sa,
+					sizeof(struct sockaddr_storage)) == 0));
+		}else
+			return ax25addr == s.ax25addr;
 	};
 
 	ssize_t	framesize() { return _maxframesize(); };

@@ -957,7 +957,7 @@ string
 udp::straddr()
 {
 	if(this->family() == AF_AX25)
-		return (string)ax25destcall;
+		return (string)ax25addr;
 
 
 	saratoga::scr.debug(7,"udp::straddr()\n");
@@ -1337,7 +1337,7 @@ void udp::constructax25(char* destcall){
 
 	ax25addr=(string)destcall;
 	ax25destcall = destcall;
-
+	_maxbuff=_ax25size;
 
 	// AX25 Stuff
 	if ((ax25dlen = ax25_aton(ax25destcall, &ax25dest)) == -1) {
@@ -1363,22 +1363,23 @@ void udp::constructax25(char* destcall){
 // For in socket
 udp::udp(bool imanidiot )
 {
+	_maxbuff=_ax25size;
 
-       // IP Stuff
-       int port= sarport;
+	// IP Stuff
+	int port= sarport;
 
-      const int       on = 1;
-       struct sockaddr_in *in = (sockaddr_in *) &_sa;
-       struct protoent *proto;
-
-
-       _readytotx = false;
+	const int       on = 1;
+	struct sockaddr_in *in = (sockaddr_in *) &_sa;
+	struct protoent *proto;
 
 
-       _readytotx = false;
-       _buf.empty(); // No buffers either
-       _delay = new timer_group::timer(0); // No timer
-       _fd=ax25insock;
+	_readytotx = false;
+
+
+	_readytotx = false;
+	_buf.empty(); // No buffers either
+	_delay = new timer_group::timer(0); // No timer
+	_fd=ax25insock;
 
 }
 
