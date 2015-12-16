@@ -616,7 +616,7 @@ class peers
 {
 private:
 	const size_t	_max = 100; // Maximum # of sockets
-	std::list<*udp>	_peers; // List of open peers
+	std::list<udp>	_peers; // List of open peers
 	bool		_fdchange; // We have added/removed a peer used for select()
 public:
 	peers() { };

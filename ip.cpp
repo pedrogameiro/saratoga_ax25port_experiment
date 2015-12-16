@@ -1026,10 +1026,9 @@ peers::largestfd()
 inline bool
 peers::exists(int fd)
 {
-	for (std::list<*udp>::iterator i = _peers.begin(); i != _peers.end(); i++)
+	for (std::list<udp>::iterator i = _peers.begin(); i != _peers.end(); i++)
 	{
-		udp u = *i;
-		udp p = *u;
+		udp p = *i;
 		if (p.fd() == fd)
 			return true;
 	}
@@ -1060,12 +1059,12 @@ peers::add(sarnet::udp *p)
 		saratoga::scr.error("peers::add cannot add fd <= 2, fd=%d", p->fd());
 		return(nullptr);
 	}
-	for (std::list<udp*>::iterator i = _peers.begin(); i != _peers.end(); i++)
+	for (std::list<udp>::iterator i = _peers.begin(); i != _peers.end(); i++)
 	{
-		if ((*i)->fd() == p->fd())
+		if (i->fd() == p->fd())
 		{
 			saratoga::scr.error("peers::add fd=%d already added to files", p->fd());
-			return(i);
+			return(&(*i));
 		}
 	}
 	saratoga::scr.msg("Added new Peer %s port %d fd=%d", s.c_str(), p->port(), p->fd());
@@ -1080,13 +1079,13 @@ peers::add(sarnet::ip *address, int port)
 	sarnet::udp	*newsock;
 	string sa = address->straddr();
 
-	for (std::list<udp*>::iterator i = _peers.begin(); i != _peers.end(); i++)
+	for (std::list<udp>::iterator i = _peers.begin(); i != _peers.end(); i++)
 	{
-		if ((*i)->straddr() == sa && (*i)->port() == port)
+		if (i->straddr() == sa && i->port() == port)
 		{
 			saratoga::scr.msg("peers::add socket already exists to %s port %d",
 				sa.c_str(), port);
-			return(i);
+			return(&(*i));
 		}
 	}
 	// AX25
@@ -1118,7 +1117,7 @@ peers::add(string addr, int port)
 {
 	sarnet::udp	*newsock;
 
-	for (std::list<udp* >::iterator i = _peers.begin(); i != _peers.end(); i++)
+	for (std::list<udp>::iterator i = _peers.begin(); i != _peers.end(); i++)
 	{
 		if (i->straddr() == addr && i->port() == port)
 		{
@@ -1192,7 +1191,7 @@ sarnet::udp *
 peers::match(sarnet::ip *host)
 {
 	string haddr = host->straddr();
-	for (std::list<udp*>::iterator i = _peers.begin(); i != _peers.end(); i++)
+	for (std::list<udp>::iterator i = _peers.begin(); i != _peers.end(); i++)
 	{
 		//ax25* s = i.pointer;
 		//string c = typeid(s).name();
