@@ -119,6 +119,7 @@ class ip
 private:
 	const int OTHER	= -1;
 	union in_storage	_ip; // The IP in_addr or in6_addr data
+	string _ax25addr;
 	int			_family; // What are V4 or V6 or OTHER
 public:
 	// Blank placeholder
@@ -132,6 +133,8 @@ public:
 			bzero(&_ip.v4, sizeof(struct in_addr)); 
 		else if (_family == AF_INET6)
 			bzero(&_ip.v6, sizeof(struct in6_addr));
+		else if (_family == AF_AX25)
+			bzero(&_ip, sizeof(union in_storage));
 		else
 			bzero(&_ip, sizeof(union in_storage));
 		return;
@@ -145,6 +148,8 @@ public:
 			bcopy(&p->_ip.v4, &_ip.v4, sizeof(struct in_addr));
 		else if (_family == AF_INET6)
 			bcopy(&p->_ip.v6, &_ip.v6, sizeof(struct in6_addr));
+		else if (_family == AF_AX25)
+			_ax25addr = p->_ax25addr;
 	}
 	
 	~ip() { 
@@ -200,6 +205,7 @@ public:
 		_family = addr._family;
 		bzero(&_ip, sizeof(union in_storage));
 		bcopy(&addr._ip, &_ip, sizeof(union in_storage));
+		_ax25addr = addr._ax25addr;
 		return(*this);
 	};
 
@@ -208,6 +214,8 @@ public:
 	{
 		if (_family != rhs._family)
 			return(false);
+		if (_family == AF_AX25)
+			return _ax25addr == rhs._ax25addr;
 		if (_family == AF_INET)
 		{
 			if (memcmp(&_ip, &rhs._ip.v4, sizeof(struct in_addr)) != 0)
@@ -234,6 +242,8 @@ public:
 
 		if (_family != tmp._family)
 			return(false);
+		if (_family == AF_AX25)
+			return _ax25addr == tmp._ax25addr;
 		if (_family == AF_INET)
 		{
 			if (memcmp(&_ip, &tmp._ip.v4, sizeof(struct in_addr)) != 0)
@@ -254,6 +264,8 @@ public:
 	{
 		if (_family != rhs._family)
 			return(true);
+		if (_family == AF_AX25)
+			return _ax25addr != rhs._ax25addr;
 		if (_family == AF_INET)
 		{
 			if (memcmp(&_ip, &rhs._ip.v4, sizeof(struct in_addr)) != 0)
@@ -280,6 +292,8 @@ public:
 
 		if (_family != tmp._family)
 			return(true);
+		if (_family == AF_AX25)
+			return _ax25addr != tmp._ax25addr;
 		if (_family == AF_INET)
 		{
 			if (memcmp(&_ip, &tmp._ip.v4, sizeof(struct in_addr)) != 0)
@@ -298,10 +312,13 @@ public:
 	// What are we v4 or v6
 	int family() { return(_family); };
 	bool isother() { return(_family == OTHER); };
+	bool isax25() { return(_family == AF_AX25);};
 	bool isv4() { return(_family == AF_INET); };
 	bool isv6() { return(_family == AF_INET6); };
 	struct in_addr *addr4() { return &_ip.v4; };
 	struct in6_addr *addr6() { return &_ip.v6; };
+	string addrax25() { return _ax25addr; };
+
 
 	virtual string	straddr();
 	string	print();
@@ -778,157 +795,6 @@ public:
 	struct sockaddr *saptr() { return (struct sockaddr *) &_sa; };
 
 	string print();
-};
-
-class ax25addr : public ip
-{
-private:
-	const int OTHER	= -1;
-	union in_storage	_ip; // The IP in_addr or in6_addr data
-	int	_family = AF_AX25; // What are V4 or V6 or OTHER
-	string _ax25addr;
-public:
-
-	// Dummy, missing addr.
-	ax25addr(){
-		bzero(&_ip.v4, sizeof(struct in_addr));
-		return;
-	}
-
-	ax25addr(string addr) {
-		bzero(&_ip.v4, sizeof(struct in_addr));
-		_ax25addr = addr;
-
-		return;
-	};
-
-
-	~ax25addr() {
-		bzero(&_ip, sizeof(union in_storage)); _family = OTHER;
-	};
-
-	void zap() {
-		bzero(&_ip, sizeof(union in_storage)); _family = OTHER;
-	}
-
-
-	// Assignment via x = y;
-	ip& operator =(const ip& addr) {
-		_family = addr._family;
-		bzero(&_ip, sizeof(union in_storage));
-		bcopy(&addr._ip, &_ip, sizeof(union in_storage));
-		return(*this);
-	};
-
-	// True is ip x == y
-	bool operator ==(const ip &rhs)
-	{
-		return &rhs typeof ax25addr;
-
-		if (_family != rhs._family)
-			return(false);
-		if (_family == AF_INET)
-		{
-			typeof
-			if (memcmp(&_ip, &rhs._ip.v4, sizeof(struct in_addr)) != 0)
-				return(false);
-			return(true);
-		}
-		if (_family == AF_INET6)
-		{
-			if (memcmp(&_ip, &rhs._ip.v6, sizeof(struct in6_addr)) != 0)
-				return(false);
-			return(true);
-		}
-		if (_family == OTHER)
-			return(false);
-		return(false);
-	};
-
-	bool operator ==(const string s)
-	{
-		ip	tmp(s);
-
-		if (tmp._family != AF_INET && tmp._family != AF_INET6)
-			return(false);
-
-		if (_family != tmp._family)
-			return(false);
-		if (_family == AF_INET)
-		{
-			if (memcmp(&_ip, &tmp._ip.v4, sizeof(struct in_addr)) != 0)
-				return(false);
-			return(true);
-		}
-		if (_family == AF_INET6)
-		{
-			if (memcmp(&_ip, &tmp._ip.v6, sizeof(struct in6_addr)) != 0)
-				return(false);
-			return(true);
-		}
-		return(false);
-	}
-
-	// True is ip x != y
-	bool operator !=(const ip &rhs)
-	{
-		if (_family != rhs._family)
-			return(true);
-		if (_family == AF_INET)
-		{
-			if (memcmp(&_ip, &rhs._ip.v4, sizeof(struct in_addr)) != 0)
-				return(true);
-			return(false);
-		}
-		if (_family == AF_INET6)
-		{
-			if (memcmp(&_ip, &rhs._ip.v6, sizeof(struct in6_addr)) != 0)
-				return(true);
-			return(false);
-		}
-		if (_family == OTHER)
-			return(true);
-		return(true);
-	}
-
-	bool operator !=(const string s)
-	{
-		ip	tmp(s);
-
-		if (tmp._family != AF_INET && tmp._family != AF_INET6)
-			return(true);
-
-		if (_family != tmp._family)
-			return(true);
-		if (_family == AF_INET)
-		{
-			if (memcmp(&_ip, &tmp._ip.v4, sizeof(struct in_addr)) != 0)
-				return(true);
-			return(false);
-		}
-		if (_family == AF_INET6)
-		{
-			if (memcmp(&_ip, &tmp._ip.v6, sizeof(struct in6_addr)) != 0)
-				return(true);
-			return(false);
-		}
-		return(true);
-	}
-
-
-	// What are we v4 or v6
-	int family() { return(_family); };
-	bool isother() { return(_family == OTHER); };
-	bool isv4() { return(_family == AF_INET); };
-	bool isv6() { return(_family == AF_INET6); };
-	struct in_addr *addr4() { return &_ip.v4; };
-	struct in6_addr *addr6() { return &_ip.v6; };
-
-	virtual string	straddr(){
-		return _ax25addr;
-	}
-
-	string	print();
 };
 
 

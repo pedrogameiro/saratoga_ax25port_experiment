@@ -978,7 +978,7 @@ mainloop:
 		//if (FD_ISSET(v4mcastin->fd(), &crfd))
 		if(sarnet::ax25::ax25available && FD_ISSET(ax25multiout->fd(), &crfd))
 		{
-			sarnet::ax25addr *from = new sarnet::ax25addr();
+			sarnet::ip *from = new sarnet::ip();
 			sz = ax25multiout->rx(buf,from);
 			string	s = from->straddr();
 			saratoga::scr.debug(7, "main(): v4mcastin Read %d bytes from %s",

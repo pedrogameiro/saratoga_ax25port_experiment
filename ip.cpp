@@ -59,10 +59,11 @@ ip::ip(string addr)
 		_family = AF_INET;
 	else
 	{
-		saratoga::scr.error("ip(%s):Invalid IP Address\n", addrs);
-		_family = OTHER;
+		//saratoga::scr.error("ip(%s):Invalid IP Address\n", addrs);
+		_family = AF_AX25;
 		bzero(&_ip, sizeof(union in_storage));
-		delete addrs;
+		//delete addrs;
+		_ax25addr = addr;
 		return;
 	}
 	/* Convert existing string to in_addr */
@@ -87,6 +88,8 @@ ip::print()
 		return("");
 	if (_family == OTHER)
 		return("OTHER");
+	if (_family == AF_AX25)
+		return _ax25addr;
 	if (_family == AF_INET)
 	{
 		s = new char [INET_ADDRSTRLEN];
@@ -118,6 +121,8 @@ ip::straddr()
 		return("");
 	if (_family == OTHER)
 		return("");
+	if (_family == AF_AX25)
+		return _ax25addr;
 	if (_family == AF_INET)
 	{
 		s = new char [INET_ADDRSTRLEN];
@@ -1078,7 +1083,14 @@ peers::add(sarnet::ip *address, int port)
 			return(&(*i));
 		}
 	}
-	newsock = new sarnet::udp(address, port);
+	// AX25
+	if(address->family() == AF_AX25){
+		char *cstr = new char[address->addrax25().length() + 1];
+		strcpy(cstr, address->addrax25().c_str());
+		newsock = new sarnet::ax25(cstr);
+	}else
+		newsock = new sarnet::udp(address, port);
+
 	if (newsock->fd() <= 2)
 	{
 		saratoga::scr.error("peers::add cannot add peer with fd <= 2, fd=%d", newsock->fd());
@@ -1108,8 +1120,13 @@ peers::add(string addr, int port)
 			return(&(*i));
 		}
 	}
-	newsock = new sarnet::udp(addr, port);
-	if (newsock->fd() <= 2)
+	// AX25
+	if((new ip(addr))->family() == AF_AX25){
+		char *cstr = new char[addr.length() + 1];
+		strcpy(cstr, addr.c_str());
+		newsock = new sarnet::ax25(cstr);
+	}else
+		newsock = new sarnet::udp(addr, port);	if (newsock->fd() <= 2)
 	{
 		saratoga::scr.error("peers::add cannot add peer with fd <= 2, fd=%d", newsock->fd());
 		delete newsock;
@@ -1338,6 +1355,8 @@ ax25::port()
 		return(ntohs(in->sin_port));
 	case AF_INET6:
 		return(ntohs(in6->sin6_port));
+	case AF_AX25:
+		return 0;
 	default:
 		return(0);
 	}
@@ -1444,7 +1463,7 @@ ax25::rx(char *b, sarnet::ip *from)
 
 
 
-	from = new sarnet::ax25addr(addr);
+	from = new sarnet::ip(addr);
 	saratoga::scr.debug(7, "udp::rx(): Received %d bytes from %s", nread, addr);
 	if (nread < 0)
 	{
