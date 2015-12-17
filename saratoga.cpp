@@ -980,11 +980,12 @@ mainloop:
 		}
 		// Handle AX25 Input Multicast frames
 		//if (FD_ISSET(v4mcastin->fd(), &crfd))
-		if(sarnet::udp::ax25available && ax25multiin->ready())
+		if(sarnet::udp::ax25available )//&& FD_ISSET(ax25multiout->fd(), &crfd))
 		{
 			sarnet::ip *from = new sarnet::ip();
 			sz = ax25multiout->rx(buf,from);
-			if(sz > 0){
+			if (sz > 0){
+
 				string	s = from->straddr();
 				saratoga::scr.debug(7, "main(): ax25castin Read %d bytes from %s",
 					sz, s.c_str());
