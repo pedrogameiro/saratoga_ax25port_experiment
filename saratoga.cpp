@@ -980,7 +980,7 @@ mainloop:
 		}
 		// Handle AX25 Input Multicast frames
 		//if (FD_ISSET(v4mcastin->fd(), &crfd))
-		if(sarnet::udp::ax25available )//&& FD_ISSET(ax25multiout->fd(), &crfd))
+		if(sarnet::udp::ax25available && FD_ISSET(ax25multiin->fd(), &crfd))
 		{
 			sarnet::ip *from = new sarnet::ip();
 			sz = ax25multiout->rx(buf,from);

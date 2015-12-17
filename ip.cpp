@@ -1456,13 +1456,19 @@ ssize_t udp::ax25rx(char *b, sarnet::ip *from)
 	struct sockaddr sa;
 	socklen_t asize = sizeof(sa);
 	int nread;
+	unsigned char* data = ((unsigned char*)malloc(sizeof(unsigned char) * 9000));
+	memset(data,0,9000);
 
-	saratoga::scr.msg("AX25 Checking socket for messsage.");
+	saratoga::scr.msg("AX25 Checking for messages.");
 
-	if ((nread = recvfrom(ax25insock, b, sizeof(b), MSG_DONTWAIT, &sa, &asize)) == -1) {
-		saratoga::scr.msg("AX25 No messsage in socket.");
-		return -1;
+	if ((nread = recvfrom(ax25insock, data, 9000, 0, &sa, &asize)) == -1) {
+		saratoga::scr.debug(7,"Nothing to read from ax25insock!");
+		return 0;
 	}
+
+	memcpy(b, &data[17], 8983);
+
+
 
 	string addr = sa.sa_data;
 	saratoga::scr.msg("AX25 Received beacon from "+addr);

@@ -756,7 +756,7 @@ cmd::cmd_put()
 		return(true);
 	}
 	sarnet::ip isip(_args[1]);
-	if (isip.isv4() || isip.isv6())
+	if (isip.isv4() || isip.isv6() || isip.family() == AF_AX25)
 	{
 		string s = isip.straddr();
 		scr.debug(2, "cmd::cmd_put() We have a put to %s", s.c_str());
