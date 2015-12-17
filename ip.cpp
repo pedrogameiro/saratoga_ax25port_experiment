@@ -909,7 +909,6 @@ ssize_t
 udp::rx(char *b, sarnet::ip *from)
 {
 	memset(b, 0, 9000);
-	saratoga::scr.debug(7,"udp::rx: Doing a AX25 detour.");
 	if (this->family() == AF_AX25)
 		return ax25rx(b,from);
 
@@ -1499,7 +1498,7 @@ ssize_t udp::ax25rx(char *b, sarnet::ip *from)
 
 	saratoga::scr.msg("AX25 Checking for messages.");
 
-	if ((nread = recvfrom(ax25insock, data, 9000, MSG_DONTWAIT, &sa, &asize)) == -1) {
+	if ((nread = recvfrom(ax25insock, data, 9000, 0, &sa, &asize)) == -1) {
 		saratoga::scr.debug(7,"Nothing to read from ax25insock!");
 		return 0;
 	}
