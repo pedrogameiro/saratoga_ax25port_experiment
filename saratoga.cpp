@@ -104,7 +104,11 @@ readhandler(sarnet::ip ip, char *buf, size_t len)
 	Fframetype	frametype(flags);
 	Fdescriptor	descriptor(flags);
 
-	if (version.get() != F_VERSION_1)
+	int v = version.get();
+	if (ip.family() == AF_AX25){
+		printf("eu\n");
+	}
+	if (v != F_VERSION_1)
 	{
 		scr.error("Bad Frame: Not Saratoga Version 1");
 		return false;
