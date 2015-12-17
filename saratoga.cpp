@@ -1076,6 +1076,8 @@ mainloop:
 				v6loop->ready(false);
 		}
 
+
+
 		// Handle V4 Output frames - Yes to ourself
 		if (FD_ISSET(v4out->fd(), &cwfd))
 		{

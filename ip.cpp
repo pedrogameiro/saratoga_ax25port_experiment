@@ -1492,6 +1492,8 @@ ssize_t udp::ax25rx(char *b, sarnet::ip *from)
 	saratoga::scr.debug(7,"udp::rx: Doing a AX25 detour.");
 	struct sockaddr sa;
 	socklen_t asize = sizeof(sa);
+	char* srcaddr;
+	char* tmp[8];
 	int nread;
 	unsigned char* data = ((unsigned char*)malloc(sizeof(unsigned char) * 9000));
 	memset(data,0,9000);
@@ -1505,10 +1507,10 @@ ssize_t udp::ax25rx(char *b, sarnet::ip *from)
 
 	memcpy(b, &data[17], 8983);
 
-
-	//b=readable_dump(data,nread);
-
-	string addr = sa.sa_data;
+	memcpy(tmp,&data[8],7);
+	srcaddr=ax25_ntoa((ax25_address*)tmp);
+	string addr = (string)srcaddr;
+	//string addr = sa.sa_data;
 	saratoga::scr.msg("AX25 Received beacon from "+addr);
 
 	sarnet::ip retaddr(addr);
