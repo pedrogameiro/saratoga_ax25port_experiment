@@ -909,6 +909,7 @@ udp::send()
 ssize_t
 udp::rx(char *b, sarnet::ip *from)
 {
+	memset(b, 0, 9000);
 	saratoga::scr.debug(7,"udp::rx: Doing a AX25 detour.");
 	if (this->family() == AF_AX25)
 		return ax25rx(b,from);
@@ -1450,20 +1451,60 @@ udp::udp(char* destcall){
 }
 
 
+static char* readable_dump(unsigned char *data, int length)
+{
+	unsigned char c;
+	int i;
+	int cr = 1;
+	char buf[1500];
+	memset(buf,0,1500);
+	char *str;
+	char *d, *m, *y, *h, *min, *s, *upd, *uph, *upm, *load0, *load1, *load2, *freemem;
 
+	for (i = 0; length > 0; i++) {
+
+		c = *data++;
+		length--;
+
+		switch (c) {
+		case 0x00:
+			buf[i] = ' ';
+		case 0x0A:	/* hum... */
+		case 0x0D:
+			if (cr)
+				buf[i] = ' ';
+			else
+				i--;
+			break;
+		default:
+			buf[i] = c;
+		}
+		cr = (buf[i] != '\n');
+	}
+	if (cr)
+		buf[i++] = '\n';
+	buf[i++] = '\0';
+	str = (char *) malloc(sizeof(char)*i);
+	memcpy(str, &buf[17], i);
+	return str;
+}
 
 ssize_t udp::ax25rx(char *b, sarnet::ip *from)
 {
 	struct sockaddr sa;
 	socklen_t asize = sizeof(sa);
 	int nread;
+	unsigned char* data = ((unsigned char*)malloc(sizeof(unsigned char) * 9000));
+	memset(data,0,9000);
 
-	saratoga::scr.msg("AX25 Checking Received beacon");
+	saratoga::scr.msg("AX25 Checking for messages.");
 
-	if ((nread = recvfrom(ax25insock, b, sizeof(b), 0, &sa, &asize)) == -1) {
-		saratoga::scr.error("Could not read from ax25insock!");
-		return -1;
+	if ((nread = recvfrom(ax25insock, data, 9000, MSG_DONTWAIT, &sa, &asize)) == -1) {
+		saratoga::scr.debug(7,"Nothing to read from ax25insock!");
+		return 0;
 	}
+
+	b=readable_dump(data,nread);
 
 	string addr = sa.sa_data;
 	saratoga::scr.msg("AX25 Received beacon from "+addr);
