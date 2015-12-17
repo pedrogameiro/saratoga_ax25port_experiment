@@ -109,7 +109,6 @@ extern const string	if6_mcast;
 
 // Permanently open udp sockets
 extern sarnet::udp*	v4out;
-extern sarnet::udp*	v4ax25dummy;
 
 extern sarnet::udp* ax25multiout;
 extern sarnet::udp*	ax25multiin;

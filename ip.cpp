@@ -837,7 +837,6 @@ udp::strport()
 int
 udp::send()
 {
-	saratoga::scr.debug(7,"udp::rx: Doing a AX25 detour.");
 	if (this->family() == AF_AX25)
 		return ax25send();
 
@@ -909,7 +908,6 @@ udp::send()
 ssize_t
 udp::rx(char *b, sarnet::ip *from)
 {
-	saratoga::scr.debug(7,"udp::rx: Doing a AX25 detour.");
 	if (this->family() == AF_AX25)
 		return ax25rx(b,from);
 
@@ -1288,7 +1286,7 @@ int udp::initax25(){
 	}else {
 
 		//Bootstrap
-		if ((ax25portcall = ax25_config_get_addr(ax25port)) == NULL) {
+		if ((ax25portcall = ax25_config_get_addr((char*)ax25port)) == NULL) {
 			saratoga::scr.error("[AX25] Invalid AX.25 port \n"+ string(ax25port) );
 			return -1;
 		}
@@ -1347,7 +1345,7 @@ void udp::constructax25(char* destcall){
 
 
 	// IP Stuff
-	int port= sarport;
+	int port= 0;
 
 	const int	on = 1;
 	struct sockaddr_in *in = (sockaddr_in *) &_sa;
@@ -1366,7 +1364,7 @@ udp::udp(bool imanidiot )
 	_maxbuff=_ax25size;
 
 	// IP Stuff
-	int port= sarport;
+	int port= 0;
 
 	const int       on = 1;
 	struct sockaddr_in *in = (sockaddr_in *) &_sa;
@@ -1375,7 +1373,7 @@ udp::udp(bool imanidiot )
 
 	_readytotx = false;
 
-
+	_isax25 = true;
 	_readytotx = false;
 	_buf.empty(); // No buffers either
 	_delay = new timer_group::timer(0); // No timer
@@ -1454,14 +1452,15 @@ udp::udp(char* destcall){
 
 ssize_t udp::ax25rx(char *b, sarnet::ip *from)
 {
+	saratoga::scr.debug(7,"udp::rx: Doing a AX25 detour.");
 	struct sockaddr sa;
 	socklen_t asize = sizeof(sa);
 	int nread;
 
-	saratoga::scr.msg("AX25 Checking Received beacon");
+	saratoga::scr.msg("AX25 Checking socket for messsage.");
 
-	if ((nread = recvfrom(ax25insock, b, sizeof(b), 0, &sa, &asize)) == -1) {
-		saratoga::scr.error("Could not read from ax25insock!");
+	if ((nread = recvfrom(ax25insock, b, sizeof(b), MSG_DONTWAIT, &sa, &asize)) == -1) {
+		saratoga::scr.msg("AX25 No messsage in socket.");
 		return -1;
 	}
 

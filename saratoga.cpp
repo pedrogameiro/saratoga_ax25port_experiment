@@ -104,7 +104,11 @@ readhandler(sarnet::ip ip, char *buf, size_t len)
 	Fframetype	frametype(flags);
 	Fdescriptor	descriptor(flags);
 
-	if (version.get() != F_VERSION_1)
+	int v = version.get();
+	if (ip.family() == AF_AX25){
+		printf("eu\n");
+	}
+	if (v != F_VERSION_1)
 	{
 		scr.error("Bad Frame: Not Saratoga Version 1");
 		return false;
@@ -976,18 +980,22 @@ mainloop:
 		}
 		// Handle AX25 Input Multicast frames
 		//if (FD_ISSET(v4mcastin->fd(), &crfd))
-		if(sarnet::udp::ax25available && FD_ISSET(ax25multiout->fd(), &crfd))
+		if(sarnet::udp::ax25available )//&& FD_ISSET(ax25multiout->fd(), &crfd))
 		{
 			sarnet::ip *from = new sarnet::ip();
 			sz = ax25multiout->rx(buf,from);
-			string	s = from->straddr();
-			saratoga::scr.debug(7, "main(): ax25castin Read %d bytes from %s",
-				sz, s.c_str());
-			if (saratoga::readhandler(from, buf, sz) && fdchange()){
-				delete from;
-				goto mainloop;
-			}else
-				delete from;
+			if (sz > 0){
+
+				string	s = from->straddr();
+				saratoga::scr.debug(7, "main(): ax25castin Read %d bytes from %s",
+					sz, s.c_str());
+				if (saratoga::readhandler(from, buf, sz) && fdchange()){
+					delete from;
+					goto mainloop;
+				}
+			}
+			delete from;
+
 		}
 		// Handle V6 Input frames
 		if (FD_ISSET(v6in->fd(), &crfd))

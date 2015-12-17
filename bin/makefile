@@ -4,6 +4,8 @@
 
 -include ../makefile.init
 
+
+.DEFAULT_GOAL := all
 RM := rm -rf
 
 # All of the sources participating in the build are defined here
