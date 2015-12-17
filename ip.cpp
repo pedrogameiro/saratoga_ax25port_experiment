@@ -1504,7 +1504,10 @@ ssize_t udp::ax25rx(char *b, sarnet::ip *from)
 		return 0;
 	}
 
-	b=readable_dump(data,nread);
+	memcpy(b, &data[17], 8983);
+
+
+	//b=readable_dump(data,nread);
 
 	string addr = sa.sa_data;
 	saratoga::scr.msg("AX25 Received beacon from "+addr);
