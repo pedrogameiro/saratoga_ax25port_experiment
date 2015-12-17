@@ -112,7 +112,7 @@ cli_beacon::execute()
 		scr.msgout("Trying to queue AX25 beacon");
 		// We always want the AX25 Address in the eid
 		//eidstr = std::string(sarnet::udp::ax25srcaddress);
-		eidstr = ax25multiout->straddr();
+		eidstr = sarnet::udp::ax25srcaddress;
 		eidstr += " ";
 		eidstr += c_eid.eid();
 		// Do we wish to advertise free space
