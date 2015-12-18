@@ -744,10 +744,10 @@ tran::applydata(saratoga::data *dat)
 	}
 
 	// Seek to the local file offset position to write to
-	scr.debug(2, "applydata:: Will Seek to %" PRIu64 " and write %" PRIu64 " bytes to %s",
-		dat->offset(),
-		dat->dbuflen(),
-		_local->fname().c_str());
+//	scr.debug(2, "applydata:: Will Seek to %" PRIu64 " and write %" PRIu64 " bytes to %s",
+//		dat->offset(),
+//		dat->dbuflen(),
+//		_local->fname().c_str());
 	_local->fwrite(dat->dbuf(), dat->dbuflen(), dat->offset());
 	hole databuf(dat->offset(), dat->dbuflen());
 	// Remove the hole if it is within our current list of holes

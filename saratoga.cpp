@@ -523,8 +523,8 @@ main(int argc, char **argv)
 	string args = "";	// Command line entry args
 	string addargs = "";	// Add to args complete an arg
 	std::vector<string> arglist; // List of arg words
-	string logname = "../saratoga.log"; // Default log file name
-	string confname = "../saratoga.conf"; // Default config file name
+	string logname = "./saratoga.log"; // Default log file name
+	string confname = "./saratoga.conf"; // Default config file name
 
 
 	// Handle command line input args
