@@ -80,7 +80,11 @@ readhandler(sarnet::ip ip, char *buf, size_t len)
 	//ipaddr = new sarnet::ip(from);
 	if ((sock = sarpeers.match(ipaddr)) == nullptr)
 	{
-		sarpeers.add(ipaddr, sarport);
+		if(ip.family() == AF_AX25)
+			sarpeers.add(ipaddr, 0);
+		else
+			sarpeers.add(ipaddr, sarport);
+
 		// Make SURE we have the socket in the list and it is open
 		if ((sock = sarpeers.match(ipaddr)) == nullptr)
 		{
@@ -105,9 +109,7 @@ readhandler(sarnet::ip ip, char *buf, size_t len)
 	Fdescriptor	descriptor(flags);
 
 	int v = version.get();
-	if (ip.family() == AF_AX25){
-		printf("eu\n");
-	}
+
 	if (v != F_VERSION_1)
 	{
 		scr.error("Bad Frame: Not Saratoga Version 1");
