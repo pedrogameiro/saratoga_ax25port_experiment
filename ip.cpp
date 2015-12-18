@@ -1336,7 +1336,7 @@ void udp::constructax25(char* destcall){
 
 	ax25addr=(string)destcall;
 	ax25destcall = destcall;
-	_maxbuff=_ax25size;
+	//_maxbuff=_ax25size;
 
 	// AX25 Stuff
 	if ((ax25dlen = ax25_aton(ax25destcall, &ax25dest)) == -1) {
