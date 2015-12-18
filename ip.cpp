@@ -1523,7 +1523,7 @@ ssize_t udp::ax25rx(char *b, sarnet::ip *from)
 		saratoga::scr.perror(err, "ax25::rx(): Cannot read\n");
 	}
 
-	return(nread);
+	return(nread-17);
 
 }
 
