@@ -42,7 +42,6 @@
 #include <list>
 
 
-
 /* 
  * At this stage we do not support 128 bit descriptors but the code is
  * all there. Just define this and we are (well should be) good to go

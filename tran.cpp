@@ -816,8 +816,6 @@ transfers::rxdata(saratoga::data *dat, sarnet::udp *sock)
 			sockinfo.c_str());
 		return(nullptr);
 	}
-	char* payload = dat->payload();
-	size_t paylen = dat->paylen();
 	// Apply all of the appropriate flags to the transfer class
 	scr.debug(9, "transfers::rxdata(): Found transfer session %" PRIu32 " for %s",
 		(uint32_t) dat->session(),
