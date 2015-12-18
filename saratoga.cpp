@@ -65,22 +65,21 @@ bool	resizeset = false;
 // If the # if fd's change then return true so we know in our mainloop
 // to redo the select()
 bool
-readhandler(sarnet::ip ip, char *buf, size_t len)
-{
+readhandler(string from, char *buf, size_t len){
+
 	flag_t	flags;
 	sarnet::udp *sock; // Where we want to create a socket to for writing
 	sarnet::ip	*ipaddr; // Source IP address 
 	saratoga::tran	*t; // The applicable transfer a frame is received for
 
+
+	ipaddr = new sarnet::ip(from);
 	// What is the source IP of this frame
 	// Add it into our list of peers and open a socket to the peer (to)
 	// if not already there
-	ipaddr = &ip;
-	string from = ipaddr->straddr();
-	//ipaddr = new sarnet::ip(from);
 	if ((sock = sarpeers.match(ipaddr)) == nullptr)
 	{
-		if(ip.family() == AF_AX25)
+		if(ipaddr->family() == AF_AX25)
 			sarpeers.add(ipaddr, 0);
 		else
 			sarpeers.add(ipaddr, sarport);
@@ -951,82 +950,73 @@ mainloop:
 
 		// Now go through all of the open fd's and handle I/O on them if they are ready
 	
-		// Handle V4 Input frames
-		if (FD_ISSET(v4in->fd(), &crfd))
-		{
-			sarnet::ip	*from = new sarnet::ip();
-			sz = v4in->rx(buf, from);
-			string	s = from->straddr();
-			saratoga::scr.debug(7, "main(): v4in Read %d bytes from %s",
-				sz, s.c_str());
-			if (saratoga::readhandler(from, buf, sz) && fdchange()){
-				delete from;
-				goto mainloop;
-			}else
-				delete from;
+		// Now go through all of the open fd's and handle I/O on them if they are ready
 
-		}
-		// Handle V4 Input Multicast frames
-		if (FD_ISSET(v4mcastin->fd(), &crfd))
-		{
-			sarnet::ip	*from = new sarnet::ip();
-			sz = v4mcastin->rx(buf, from);
-			string	s = from->straddr();
-			saratoga::scr.debug(7, "main(): v4mcastin Read %d bytes from %s",
-				sz, s.c_str());
-			if (saratoga::readhandler(from, buf, sz) && fdchange()){
-				delete from;
-				goto mainloop;
-			}else
-				delete from;
-		}
-		// Handle AX25 Input Multicast frames
-		//if (FD_ISSET(v4mcastin->fd(), &crfd))
-		if(sarnet::udp::ax25available && FD_ISSET(ax25multiin->fd(), &crfd))
-		{
-			sarnet::ip *from = new sarnet::ip();
-			sz = ax25multiout->rx(buf,from);
-			if (sz > 0){
-
+			// Handle V4 Input frames
+			if (FD_ISSET(v4in->fd(), &crfd))
+			{
+				sarnet::ip	*from = new sarnet::ip();
+				sz = v4in->rx(buf, from);
 				string	s = from->straddr();
-				saratoga::scr.debug(7, "main(): ax25castin Read %d bytes from %s",
+				saratoga::scr.debug(7, "main(): v4in Read %d bytes from %s",
 					sz, s.c_str());
-				if (saratoga::readhandler(from, buf, sz) && fdchange()){
-					delete from;
+				delete from;
+				if (saratoga::readhandler(s, buf, sz) && fdchange())
 					goto mainloop;
+			}
+			// Handle V4 Input Multicast frames
+			if (FD_ISSET(v4mcastin->fd(), &crfd))
+			{
+				sarnet::ip	*from = new sarnet::ip();
+				sz = v4mcastin->rx(buf, from);
+				string	s = from->straddr();
+				saratoga::scr.debug(7, "main(): v4mcastin Read %d bytes from %s",
+					sz, s.c_str());
+				delete from;
+				if (saratoga::readhandler(s, buf, sz) && fdchange())
+					goto mainloop;
+			}
+			// Handle V6 Input frames
+			if (FD_ISSET(v6in->fd(), &crfd))
+			{
+				sarnet::ip	*from = new sarnet::ip();
+				sz = v6in->rx(buf, from);
+				string	s = from->straddr();
+				saratoga::scr.debug(7, "main(): v6in Read %d bytes from %s",
+					sz, s.c_str());
+				delete from;
+				if (saratoga::readhandler(s, buf, sz) && fdchange())
+					goto mainloop;
+			}
+			// Handle V6 Input Multicast frames
+			if (FD_ISSET(v6mcastin->fd(), &crfd))
+			{
+				sarnet::ip	*from = new sarnet::ip();
+				sz = v6mcastin->rx(buf, from);
+				string	s = from->straddr();
+				saratoga::scr.debug(7, "main(): v6mcastin Read %d bytes from %s",
+					sz, s.c_str());
+				delete from;
+				if (saratoga::readhandler(s, buf, sz) && fdchange()) //;
+					goto mainloop;
+			}
+
+			// Handle AX25 Input Multicast frames
+			//if (FD_ISSET(v4mcastin->fd(), &crfd))
+			if(sarnet::udp::ax25available && FD_ISSET(ax25multiin->fd(), &crfd))
+			{
+				sarnet::ip *from = new sarnet::ip();
+				sz = ax25multiout->rx(buf,from);
+				if (sz > 0){
+					string	s = from->straddr();
+					saratoga::scr.debug(7, "main(): ax25castin Read %d bytes from %s",
+						sz, s.c_str());
+						delete from;
+					if (saratoga::readhandler(s, buf, sz) && fdchange()){
+						goto mainloop;
+					}
 				}
 			}
-			delete from;
-		}
-		// Handle V6 Input frames
-		if (FD_ISSET(v6in->fd(), &crfd))
-		{
-			sarnet::ip	*from = new sarnet::ip();
-			sz = v6in->rx(buf, from);
-			string	s = from->straddr();
-			saratoga::scr.debug(7, "main(): v6in Read %d bytes from %s",
-				sz, s.c_str());
-			if (saratoga::readhandler(from, buf, sz) && fdchange()){
-				delete from;
-				goto mainloop;
-			}else
-				delete from;
-		}
-		// Handle V6 Input Multicast frames
-		if (FD_ISSET(v6mcastin->fd(), &crfd))
-		{
-			sarnet::ip	*from = new sarnet::ip();
-			sz = v6mcastin->rx(buf, from);
-			string	s = from->straddr();
-			saratoga::scr.debug(7, "main(): v6mcastin Read %d bytes from %s",
-				sz, s.c_str());
-			if (saratoga::readhandler(from, buf, sz) && fdchange()){
-				delete from;
-				goto mainloop;
-			}else
-				delete from;
-		}
-
 
 
 		// Multicast Outputs
