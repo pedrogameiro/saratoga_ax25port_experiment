@@ -31,25 +31,26 @@
 using namespace std;
 using namespace saratoga;
 
-namespace timer_group
+namespace timer_group {
+
+class timer
 {
+private:
+  saratoga::offset_t elapsedTime;           // tempo espera
+  chrono::steady_clock::time_point begTime; // tempo inicio
+  string name;
 
-	class timer {
-		private:
-			saratoga::offset_t elapsedTime; //tempo espera
-			chrono::steady_clock::time_point begTime; //tempo inicio
-			string name;
-		public:
-			timer();
-			timer(saratoga::offset_t);
-			timer(string str, saratoga::offset_t t);
-			//timer(string *str, saratoga::offset_t t);
+public:
+  timer();
+  timer(saratoga::offset_t);
+  timer(string str, saratoga::offset_t t);
+  // timer(string *str, saratoga::offset_t t);
 
-			bool elapsed();
-			void reset();
-			bool timedout();
-	};
+  bool elapsed();
+  void reset();
+  bool timedout();
+};
 
-}//namespace
+} // namespace
 
 #endif /* TIMER_H_ */
