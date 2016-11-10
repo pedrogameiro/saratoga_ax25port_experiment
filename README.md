@@ -1,9 +1,9 @@
+## This project is very experimental and it is not ready for a real world scenario use.
 In this project, developed in the context of the Communication Networks Engineering course in Instituto Superior Técnico (IST), the proposed challenge was to adapt a working Saratoga protocol implementation to work, not only over the original network stack, but also over AX25, a OSI layer 2 protocol of very popular use over amateur radio communications.
 
-## This project is very experimental and it is not ready for a real world scenario use.
 
-### Original description
-
+-- Original description --
+===================================================
 Saratoga transfer protocol - Vallona implementation
 ===================================================
 
